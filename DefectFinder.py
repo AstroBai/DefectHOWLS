@@ -82,12 +82,13 @@ class DefectFinder:
         rows, cols = self.shape
         
         # Define 8 neighbors in counter-clockwise order
+        # Adjusted for origin='lower' (row index increases upwards)
         # (row_offset, col_offset)
-        # Right: (0, 1), Top-Right: (-1, 1), Top: (-1, 0), Top-Left: (-1, -1)
-        # Left: (0, -1), Bottom-Left: (1, -1), Bottom: (1, 0), Bottom-Right: (1, 1)
+        # Right: (0, 1), Top-Right: (1, 1), Top: (1, 0), Top-Left: (1, -1)
+        # Left: (0, -1), Bottom-Left: (-1, -1), Bottom: (-1, 0), Bottom-Right: (-1, 1)
         neighbor_offsets = [
-            (0, 1), (-1, 1), (-1, 0), (-1, -1),
-            (0, -1), (1, -1), (1, 0), (1, 1)
+            (0, 1), (1, 1), (1, 0), (1, -1),
+            (0, -1), (-1, -1), (-1, 0), (-1, 1)
         ]
         
         # Pad with NaNs to handle boundaries
