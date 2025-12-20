@@ -144,33 +144,33 @@ all_cov = data_slics['all_cov'] * area_scaling
 kk_cov = data_slics['kk_cov'] * area_scaling
 
 n=924
-kappa_inv_cov = np.linalg.inv(kappa_cov) * (n-10-2) / (n-1)
-kappa_pos_inv_cov = np.linalg.inv(kappa_pos_cov) * (n-10-2) / (n-1)
-kappa_neg_inv_cov = np.linalg.inv(kappa_neg_cov) * (n-10-2) / (n-1)
-nn_pos_same1_inv_cov = np.linalg.inv(nn_pos_same1_cov) * (n-10-2) / (n-1)
-nn_neg_same1_inv_cov = np.linalg.inv(nn_neg_same1_cov) * (n-10-2) / (n-1)
-nn_pos_opp1_inv_cov = np.linalg.inv(nn_pos_opp1_cov) * (n-10-2) / (n-1)
-nn_neg_opp1_inv_cov = np.linalg.inv(nn_neg_opp1_cov) * (n-10-2) / (n-1)
-nn_pos_same2_inv_cov = np.linalg.inv(nn_pos_same2_cov) * (n-10-2) / (n-1)
-nn_neg_same2_inv_cov = np.linalg.inv(nn_neg_same2_cov) * (n-10-2) / (n-1)  
-nn_pos_opp2_inv_cov = np.linalg.inv(nn_pos_opp2_cov) * (n-10-2) / (n-1)
-nn_neg_opp2_inv_cov = np.linalg.inv(nn_neg_opp2_cov) * (n-10-2) / (n-1)
-nn_pos_same4_inv_cov = np.linalg.inv(nn_pos_same4_cov) * (n-10-2) / (n-1)
-nn_neg_same4_inv_cov = np.linalg.inv(nn_neg_same4_cov) * (n-10-2) / (n-1)
-nn_pos_opp4_inv_cov = np.linalg.inv(nn_pos_opp4_cov) * (n-10-2) / (n-1)
-nn_neg_opp4_inv_cov = np.linalg.inv(nn_neg_opp4_cov) * (n-10-2) / (n-1) 
-nn_pos_same8_inv_cov = np.linalg.inv(nn_pos_same8_cov)  * (n-10-2) / (n-1)
-nn_neg_same8_inv_cov = np.linalg.inv(nn_neg_same8_cov) * (n-10-2) / (n-1)
-nn_pos_opp8_inv_cov = np.linalg.inv(nn_pos_opp8_cov) * (n-10-2) / (n-1)
-nn_neg_opp8_inv_cov = np.linalg.inv(nn_neg_opp8_cov)  * (n-10-2) / (n-1)
-kappa_all_inv_cov = np.linalg.inv(kappa_all_cov) * (n-10*2-2) / (n-1)
-nn_1_inv_cov = np.linalg.inv(nn_1_cov) * (n-10*4-2) / (n-1)
-nn_2_inv_cov = np.linalg.inv(nn_2_cov) * (n-10*4-2) / (n-1)
-nn_4_inv_cov = np.linalg.inv(nn_4_cov) * (n-10*4-2) / (n-1)
-nn_8_inv_cov = np.linalg.inv(nn_8_cov) * (n-10*4-2) / (n-1)
-nn_all_inv_cov = np.linalg.inv(nn_all_cov) * (n-10*16-2) / (n-1)
-all_inv_cov = np.linalg.inv(all_cov) * (n-10*16-10*2-2) / (n-1)  
-kk_inv_cov = np.linalg.inv(kk_cov) * (n-10-2) / (n-1)
+kappa_inv_cov = np.linalg.inv(kappa_cov) * (n-30-2) / (n-1)
+kappa_pos_inv_cov = np.linalg.inv(kappa_pos_cov) * (n-30-2) / (n-1)
+kappa_neg_inv_cov = np.linalg.inv(kappa_neg_cov) * (n-30-2) / (n-1)
+nn_pos_same1_inv_cov = np.linalg.inv(nn_pos_same1_cov) * (n-30-2) / (n-1)
+nn_neg_same1_inv_cov = np.linalg.inv(nn_neg_same1_cov) * (n-30-2) / (n-1)
+nn_pos_opp1_inv_cov = np.linalg.inv(nn_pos_opp1_cov) * (n-30-2) / (n-1)
+nn_neg_opp1_inv_cov = np.linalg.inv(nn_neg_opp1_cov) * (n-30-2) / (n-1)
+nn_pos_same2_inv_cov = np.linalg.inv(nn_pos_same2_cov) * (n-30-2) / (n-1)
+nn_neg_same2_inv_cov = np.linalg.inv(nn_neg_same2_cov) * (n-30-2) / (n-1)  
+nn_pos_opp2_inv_cov = np.linalg.inv(nn_pos_opp2_cov) * (n-30-2) / (n-1)
+nn_neg_opp2_inv_cov = np.linalg.inv(nn_neg_opp2_cov) * (n-30-2) / (n-1)
+nn_pos_same4_inv_cov = np.linalg.inv(nn_pos_same4_cov) * (n-30-2) / (n-1)
+nn_neg_same4_inv_cov = np.linalg.inv(nn_neg_same4_cov) * (n-30-2) / (n-1)
+nn_pos_opp4_inv_cov = np.linalg.inv(nn_pos_opp4_cov) * (n-30-2) / (n-1)
+nn_neg_opp4_inv_cov = np.linalg.inv(nn_neg_opp4_cov) * (n-30-2) / (n-1) 
+nn_pos_same8_inv_cov = np.linalg.inv(nn_pos_same8_cov)  * (n-30-2) / (n-1)
+nn_neg_same8_inv_cov = np.linalg.inv(nn_neg_same8_cov) * (n-30-2) / (n-1)
+nn_pos_opp8_inv_cov = np.linalg.inv(nn_pos_opp8_cov) * (n-30-2) / (n-1)
+nn_neg_opp8_inv_cov = np.linalg.inv(nn_neg_opp8_cov)  * (n-30-2) / (n-1)
+kappa_all_inv_cov = np.linalg.inv(kappa_all_cov) * (n-30*2-2) / (n-1)
+nn_1_inv_cov = np.linalg.inv(nn_1_cov) * (n-30*4-2) / (n-1)
+nn_2_inv_cov = np.linalg.inv(nn_2_cov) * (n-30*4-2) / (n-1)
+nn_4_inv_cov = np.linalg.inv(nn_4_cov) * (n-30*4-2) / (n-1)
+nn_8_inv_cov = np.linalg.inv(nn_8_cov) * (n-30*4-2) / (n-1)
+nn_all_inv_cov = np.linalg.inv(nn_all_cov) * (n-30*16-2) / (n-1)
+all_inv_cov = np.linalg.inv(all_cov) * (n-30*16-10*2-2) / (n-1)  
+kk_inv_cov = np.linalg.inv(kk_cov) * (n-30-2) / (n-1)
 
 fisher_kappa = np.zeros((2,2))
 fisher_kappa_pos = np.zeros((2,2))
@@ -282,22 +282,22 @@ mpl.rcParams['ytick.direction'] = 'in'
 # use tab10 colors
 color_map = plt.get_cmap('tab10')
 # pdf kappa_pos, kappa_neg, kappa_all
-g = plots.get_subplot_plotter(width_inch=6)
+g = plots.get_subplot_plotter(width_inch=6, subplot_size_ratio=0.8)
 g.plot_2d([kappa_pos_samples, kappa_neg_samples, kappa_all_samples, kk_samples, kappa_samples],
           param1="Om", param2="sigma8",
             filled=[True]*2 + [False]*3,
-            # lims = [0.0, 0.6, 0.5, 1.1],
+            lims = [0.295, 0.33, 0.82, 0.865],
             colors=[color_map(i) for i in range(2)] + ['red', 'blue', 'black'],
             lws=2,
             alphas=[0.7, 0.7, 1.0, 1.0, 1.0])
 g.add_legend([r"$C^{p}(\kappa)$", r"$C^{n}(\kappa)$", r"$C^{\mathrm{all}}(\kappa)$", r"$\xi^{\kappa\kappa}(\theta)$", r"PDF"], legend_loc='upper right')
 g.export("outfiles/dcdf.png", dpi=300)
 # pdf nn_1, nn_2, nn_4, nn_8, nn_all
-g = plots.get_subplot_plotter(width_inch=6)
+g = plots.get_subplot_plotter(width_inch=6, subplot_size_ratio=0.8)
 g.plot_2d([nn_1_samples, nn_2_samples, nn_4_samples, nn_8_samples, nn_all_samples, kk_samples, kappa_samples],
           param1="Om", param2="sigma8",
             filled=[True]*4 + [False]*3,
-            # lims = [0.0, 0.6, 0.5, 1.1],
+            lims = [0.295, 0.33, 0.82, 0.865],
             colors=[color_map(i) for i in range(4)] + ['red', 'blue', 'black'],
             lws=2,
             alphas=[0.7]*4 + [1.0, 1.0, 1.0])
@@ -305,11 +305,11 @@ g.add_legend([r"$C^{\mathrm{all}}_1(\theta)$", r"$C^{\mathrm{all}}_2(\theta)$", 
 g.export("outfiles/nns.png", dpi=300)
 
 # kappa_all nn_all all
-g = plots.get_subplot_plotter(width_inch=6)
+g = plots.get_subplot_plotter(width_inch=6, subplot_size_ratio=0.8)
 g.plot_2d([kappa_all_samples, nn_all_samples, kk_samples, kappa_samples, all_samples],
           param1="Om", param2="sigma8",
             filled=[True]*2 + [False]*3,
-            # lims = [0.0, 0.6, 0.5, 1.1],
+            lims = [0.295, 0.33, 0.82, 0.865],
             colors=[color_map(i) for i in range(2)] + ['blue', 'black', 'red'],   
             lws=2,
             alphas=[0.7, 0.7, 1.0, 1.0, 1.0])

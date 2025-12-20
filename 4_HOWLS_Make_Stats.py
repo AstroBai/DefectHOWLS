@@ -12,7 +12,7 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
 N = 128
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.015, 0.015, 10)
+    bin_edges = np.linspace(-0.02, 0.03, 30)
     df = DefectFinder(f"{OM02_DIR}/angles_s467_{i}_LCDM_Om02_ks_nomask_shear.npz")
     df.load_defects(f"{OM02_DIR}/defects_s467_{i}_LCDM_Om02_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -37,10 +37,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.linspace(5, 50, 10)
-    bin_edges2 = np.linspace(10, 60, 10)
-    bin_edges4 = np.linspace(20, 70, 10)
-    bin_edges8 = np.linspace(30, 90, 10) 
+    bin_edges1 = np.linspace(5, 50, 30)
+    bin_edges2 = np.linspace(10, 60, 30)
+    bin_edges4 = np.linspace(20, 60, 30)
+    bin_edges8 = np.linspace(30, 100, 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -91,7 +91,7 @@ for i in tqdm(range(N)):
 
     
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.015, 0.015, 10)
+    bin_edges = np.linspace(-0.02, 0.03, 30)
     df = DefectFinder(f"{OM04_DIR}/angles_s467_{i}_LCDM_Om04_ks_nomask_shear.npz")
     df.load_defects(f"{OM04_DIR}/defects_s467_{i}_LCDM_Om04_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -116,10 +116,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.linspace(5, 50, 10)
-    bin_edges2 = np.linspace(10, 60, 10)
-    bin_edges4 = np.linspace(20, 70, 10)
-    bin_edges8 = np.linspace(30, 90, 10)
+    bin_edges1 = np.linspace(5, 50, 30)
+    bin_edges2 = np.linspace(10, 60, 30)
+    bin_edges4 = np.linspace(20, 60, 30)
+    bin_edges8 = np.linspace(30, 100, 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -169,7 +169,7 @@ for i in tqdm(range(N)):
                 bin_edges8=bin_edges8)
 
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.015, 0.015, 10)
+    bin_edges = np.linspace(-0.02, 0.03, 30)
     df = DefectFinder(f"{S807_DIR}/angles_s467_{i}_LCDM_s80707210_ks_nomask_shear.npz")
     df.load_defects(f"{S807_DIR}/defects_s467_{i}_LCDM_s80707210_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -194,10 +194,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.linspace(5, 50, 10)
-    bin_edges2 = np.linspace(10, 60, 10)
-    bin_edges4 = np.linspace(20, 70, 10)
-    bin_edges8 = np.linspace(30, 90, 10)
+    bin_edges1 = np.linspace(5, 50, 30)
+    bin_edges2 = np.linspace(10, 60, 30)
+    bin_edges4 = np.linspace(20, 60, 30)
+    bin_edges8 = np.linspace(30, 100, 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -247,7 +247,7 @@ for i in tqdm(range(N)):
                 bin_edges8=bin_edges8)
 
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.015, 0.015, 10)
+    bin_edges = np.linspace(-0.02, 0.03, 30)
     df = DefectFinder(f"{S809_DIR}/angles_s467_{i}_LCDM_s80976624_ks_nomask_shear.npz")
     df.load_defects(f"{S809_DIR}/defects_s467_{i}_LCDM_s80976624_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -272,10 +272,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.linspace(5, 50, 10)
-    bin_edges2 = np.linspace(10, 60, 10)
-    bin_edges4 = np.linspace(20, 70, 10)
-    bin_edges8 = np.linspace(30, 90, 10)
+    bin_edges1 = np.linspace(5, 50, 30)
+    bin_edges2 = np.linspace(10, 60, 30)
+    bin_edges4 = np.linspace(20, 60, 30)
+    bin_edges8 = np.linspace(30, 100, 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2   
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -327,7 +327,7 @@ for i in tqdm(range(N)):
 N = 1000
 for i in tqdm(range(N)):
     try:
-        bin_edges = np.linspace(-0.015, 0.015, 10)
+        bin_edges = np.linspace(-0.02, 0.03, 30)
         df = DefectFinder(f"{SLICS_DIR}/angles_s467_{i}_LCDM_SLICS_ks_nomask_shear.npz")
         df.load_defects(f"{SLICS_DIR}/defects_s467_{i}_LCDM_SLICS_ks_nomask_shear.npz")
         kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -352,10 +352,10 @@ for i in tqdm(range(N)):
         nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
         nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
         nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-        bin_edges1 = np.linspace(5, 50, 10)
-        bin_edges2 = np.linspace(10, 60, 10)
-        bin_edges4 = np.linspace(20, 70, 10)
-        bin_edges8 = np.linspace(30, 90, 10)
+        bin_edges1 = np.linspace(5, 50, 30)
+        bin_edges2 = np.linspace(10, 60, 30)
+        bin_edges4 = np.linspace(20, 60, 30)
+        bin_edges8 = np.linspace(30, 100, 30)
         nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2   
         nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2 
         nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2 

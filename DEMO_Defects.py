@@ -12,8 +12,8 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 # --- Configuration for Zoom ---
 N_pix_total = 1024
 FoV_total = 10.0 # degrees
-FoV_zoom = 2.0   # degrees
-seed = 999
+FoV_zoom = 2   # degrees
+seed = 997
 
 # Calculate pixel limit for the zoom
 limit_pix = int((FoV_zoom / FoV_total) * N_pix_total)
@@ -63,7 +63,7 @@ for pix, wnum in defects.items():
 # 3. Plotting
 print("Plotting...")
 # Changed to 3 subplots, increased figure width
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 7)) 
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5)) 
 extent = [0, FoV_zoom, 0, FoV_zoom] # Set axis to degrees
 
 # --- Subplot 1: Convergence with Shear Orientation ---
@@ -106,7 +106,7 @@ for (r, c), wnum in defects_zoom.items():
     ax1.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, label=lbl, zorder=10)
     ax1.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
 
-ax1.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom} deg)')
+ax1.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax1.set_xlabel('RA [deg]')
 ax1.set_ylabel('Dec [deg]')
 
@@ -138,7 +138,7 @@ for (r, c), wnum in defects_zoom.items():
     ax2.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, zorder=10)
     ax2.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
 
-ax2.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom} deg)')
+ax2.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax2.set_xlabel('RA [deg]')
 ax2.set_ylabel('Dec [deg]')
 
@@ -183,10 +183,10 @@ for (r, c), wnum in defects_zoom.items():
     ax3.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, zorder=10)
     ax3.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
 
-ax3.set_title(f'Shear Phase ({FoV_zoom}x{FoV_zoom} deg)')
+ax3.set_title(f'Shear Phase ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax3.set_xlabel('RA [deg]')
 ax3.set_ylabel('Dec [deg]')
 
-plt.tight_layout()
+plt.tight_layout(pad=0.3)
 plt.savefig("outfiles/Demo_Defects.png", dpi=300, bbox_inches='tight')
 print("Saved plot to outfiles/Demo_Defects.png")

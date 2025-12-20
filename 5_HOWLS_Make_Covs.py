@@ -44,7 +44,7 @@ for i in tqdm(range(N)):
     kappa_neg_cum = data['kappa_neg_cum']
     nn_pos_same1_cum = data['nn_pos_same1_cum']
     nn_neg_same1_cum = data['nn_neg_same1_cum']
-    nn_pos_opp1_cum = data['nn_pos_opp1_cum']
+    nn_pos_opp1_cum = data['nn_pos_opp1_cum']   
     nn_neg_opp1_cum = data['nn_neg_opp1_cum']
     nn_pos_same2_cum = data['nn_pos_same2_cum']
     nn_neg_same2_cum = data['nn_neg_same2_cum']

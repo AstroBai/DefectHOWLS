@@ -105,13 +105,13 @@ bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 n = n_bins_kappa
 
 ax.plot(bin_centers, kappa_fid, c='black')
-ax.errorbar(bin_centers, kappa_fid, yerr=np.sqrt(np.diag(kappa_cov)) / np.sqrt(924), fmt='o', label='Fiducial', c='black')
+ax.errorbar(bin_centers, kappa_fid, yerr=np.sqrt(np.diag(kappa_cov)) / np.sqrt(924), fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_centers, kappa_derivs_mean[0:n], 
             yerr=np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\Omega_m$')
+            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_centers, kappa_derivs_mean[n:2*n], 
             yerr=np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\sigma_8$')
+            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
 ax.fill_between(bin_centers, kappa_derivs_mean[0:n] - np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), kappa_derivs_mean[0:n] + np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), alpha=0.3)
 ax.fill_between(bin_centers, kappa_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), kappa_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), alpha=0.3)
 
@@ -129,13 +129,13 @@ fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
 ax = axes[0]
 n = n_bins_pos
 ax.plot(bin_edges, kappa_pos_fid, c='black')
-ax.errorbar(bin_edges, kappa_pos_fid, yerr=np.sqrt(np.diag(kappa_pos_cov)) / np.sqrt(924), fmt='o', label='Fiducial', c='black')
+ax.errorbar(bin_edges, kappa_pos_fid, yerr=np.sqrt(np.diag(kappa_pos_cov)) / np.sqrt(924), fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_edges, kappa_pos_derivs_mean[0:n], 
             yerr=np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\Omega_m$')
+            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_edges, kappa_pos_derivs_mean[n:2*n], 
             yerr=np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\sigma_8$')
+            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
 ax.fill_between(bin_edges, kappa_pos_derivs_mean[0:n] - np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), kappa_pos_derivs_mean[0:n] + np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), alpha=0.3)
 ax.fill_between(bin_edges, kappa_pos_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), kappa_pos_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), alpha=0.3)
 ax.set_xlabel(r'$\kappa$')
@@ -148,13 +148,13 @@ ax.grid(True, alpha=0.3)
 ax = axes[1]
 n = n_bins_neg
 ax.plot(bin_edges, kappa_neg_fid, c='black')
-ax.errorbar(bin_edges, kappa_neg_fid, yerr=np.sqrt(np.diag(kappa_neg_cov)) / np.sqrt(924), fmt='o', label='Fiducial', c='black')
+ax.errorbar(bin_edges, kappa_neg_fid, yerr=np.sqrt(np.diag(kappa_neg_cov)) / np.sqrt(924), fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_edges, kappa_neg_derivs_mean[0:n], 
             yerr=np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\Omega_m$')
+            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_edges, kappa_neg_derivs_mean[n:2*n], 
             yerr=np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\sigma_8$')
+            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
 ax.fill_between(bin_edges, kappa_neg_derivs_mean[0:n] - np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), kappa_neg_derivs_mean[0:n] + np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), alpha=0.3)
 ax.fill_between(bin_edges, kappa_neg_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), kappa_neg_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), alpha=0.3)
 ax.set_xlabel(r'$\kappa$')
@@ -174,13 +174,13 @@ n = n_bins_nn
 # 2NN Same
 ax = axes[0]
 ax.plot(bin_edges2, nn_pos_same2_fid, c='black')
-ax.errorbar(bin_edges2, nn_pos_same2_fid, yerr=np.sqrt(np.diag(nn_pos_same2_cov)) / np.sqrt(924), fmt='o', label='Fiducial', c='black')
+ax.errorbar(bin_edges2, nn_pos_same2_fid, yerr=np.sqrt(np.diag(nn_pos_same2_cov)) / np.sqrt(924), fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_edges2, nn_pos_same2_derivs_mean[0:n], 
             yerr=np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\Omega_m$')
+            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_edges2, nn_pos_same2_derivs_mean[n:2*n], 
             yerr=np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\sigma_8$')
+            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
 ax.fill_between(bin_edges2, nn_pos_same2_derivs_mean[0:n] - np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), nn_pos_same2_derivs_mean[0:n] + np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), alpha=0.3)
 ax.fill_between(bin_edges2, nn_pos_same2_derivs_mean[n:2*n] - np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), nn_pos_same2_derivs_mean[n:2*n] + np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), alpha=0.3)
 ax.set_title('2NN Same CDF')
@@ -191,13 +191,13 @@ ax.grid(True, alpha=0.3)
 # 2NN Opp
 ax = axes[1]
 ax.plot(bin_edges2, nn_pos_opp2_fid, c='black')
-ax.errorbar(bin_edges2, nn_pos_opp2_fid, yerr=np.sqrt(np.diag(nn_pos_opp2_cov)) / np.sqrt(924), fmt='o', label='Fiducial', c='black')
+ax.errorbar(bin_edges2, nn_pos_opp2_fid, yerr=np.sqrt(np.diag(nn_pos_opp2_cov)) / np.sqrt(924), fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_edges2, nn_pos_opp2_derivs_mean[0:n], 
             yerr=np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\Omega_m$')
+            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_edges2, nn_pos_opp2_derivs_mean[n:2*n], 
             yerr=np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), 
-            fmt='o', label=r'Derv. w.r.t $\sigma_8$')
+            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
 ax.fill_between(bin_edges2, nn_pos_opp2_derivs_mean[0:n] - np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), nn_pos_opp2_derivs_mean[0:n] + np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) / np.sqrt(N_samples), alpha=0.3)
 ax.fill_between(bin_edges2, nn_pos_opp2_derivs_mean[n:2*n] - np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), nn_pos_opp2_derivs_mean[n:2*n] + np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) / np.sqrt(N_samples), alpha=0.3)
 ax.set_title('2NN Opp CDF')
