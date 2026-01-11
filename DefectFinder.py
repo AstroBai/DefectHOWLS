@@ -330,3 +330,25 @@ class DefectFinder:
         thetas = kk.meanr
         xi = kk.xi
         return thetas, xi
+
+    def number(self):
+        # for integer charge, count as 2 defects
+        total_defects = 0
+        n_pos = 0
+        n_neg = 0
+        for wnum in self.defects.values():
+            if wnum == 0.5:
+                total_defects += 1
+                n_pos += 1
+            elif wnum == -0.5:
+                total_defects += 1
+                n_neg += 1
+            elif wnum == 1:
+                total_defects += 2
+                n_pos += 2
+            elif wnum == -1:
+                total_defects += 2
+                n_neg += 2
+        self.defect_count = total_defects  
+        n = total_defects / (4 * np.pi)  # number per steradian
+        return n, n_pos, n_neg

@@ -4,7 +4,7 @@ from tqdm import tqdm
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 from DefectFinder import DefectFinder
-from mpl_toolkits.axes_grid1 import make_axes_locatable  # 引入这个工具
+from mpl_toolkits.axes_grid1 import make_axes_locatable 
 
 DATA_DIR = "/cephfs/jbai/HOWLS_Data"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
@@ -30,6 +30,7 @@ with fits.open(f"{SLICS_DIR}/kappa_noise_GalCatalog_LOS_cone{seed}.fits_s333{see
 print("Loading defect data...")
 df = DefectFinder(f"{SLICS_DIR}/angles_s467_{seed}_LCDM_SLICS_ks_nomask_shear.npz")
 df.find_defects(savepath=f"{SLICS_DIR}/defects_s467_{seed}_LCDM_SLICS_ks_nomask_shear.npz")
+print(df.number())
 
 # Extract fields
 phi = df.phi
@@ -190,3 +191,126 @@ ax3.set_ylabel('Dec [deg]')
 plt.tight_layout(pad=0.3)
 plt.savefig("outfiles/Demo_Defects.png", dpi=300, bbox_inches='tight')
 print("Saved plot to outfiles/Demo_Defects.png")
+
+# --- Version without defect markers (no circles, no +/− signs) ---
+print("Plotting version without defect markers...")
+fig2, (ax1_nd, ax2_nd, ax3_nd) = plt.subplots(1, 3, figsize=(18, 5))
+extent = [0, FoV_zoom, 0, FoV_zoom]
+
+# Subplot 1: Convergence with Shear Orientation (no defect markers)
+im1_nd = ax1_nd.imshow(conv_zoom, origin='lower', cmap='RdYlBu_r', extent=extent)
+divider1_nd = make_axes_locatable(ax1_nd)
+cax1_nd = divider1_nd.append_axes("right", size="5%", pad=0.1)
+plt.colorbar(im1_nd, cax=cax1_nd, label=r'Smoothed Convergence $\kappa$')
+
+step = 8
+x_deg = np.linspace(0, FoV_zoom, limit_pix)
+y_deg = np.linspace(0, FoV_zoom, limit_pix)
+X, Y = np.meshgrid(x_deg, y_deg)
+
+ax1_nd.quiver(X[::step, ::step], Y[::step, ::step], 
+              ux_zoom[::step, ::step], uy_zoom[::step, ::step], 
+              angles='xy', scale_units='xy',
+              color='white', width=0.004, alpha=0.6,
+              headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+
+ax1_nd.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+ax1_nd.set_xlabel('RA [deg]')
+ax1_nd.set_ylabel('Dec [deg]')
+
+# Subplot 2: Shear Amplitude with Orientation (no defect markers)
+im2_nd = ax2_nd.imshow(shear_zoom, origin='lower', cmap='plasma', extent=extent)
+divider2_nd = make_axes_locatable(ax2_nd)
+cax2_nd = divider2_nd.append_axes("right", size="5%", pad=0.1)
+plt.colorbar(im2_nd, cax=cax2_nd, label=r'Shear Amplitude $|\gamma|$')
+
+ax2_nd.quiver(X[::step, ::step], Y[::step, ::step], 
+              ux_zoom[::step, ::step], uy_zoom[::step, ::step], 
+              angles='xy', scale_units='xy',
+              color='white', width=0.004, alpha=0.6,
+              headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+
+ax2_nd.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+ax2_nd.set_xlabel('RA [deg]')
+ax2_nd.set_ylabel('Dec [deg]')
+
+# Subplot 3: Shear Phase (no defect markers)
+im3_nd = ax3_nd.imshow(phi_zoom, origin='lower', cmap='twilight', extent=extent)
+divider3_nd = make_axes_locatable(ax3_nd)
+cax3_nd = divider3_nd.append_axes("right", size="5%", pad=0.1)
+cbar3_nd = plt.colorbar(im3_nd, cax=cax3_nd, label=r'Shear Phase $\varphi$')
+
+ticks = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi]
+tick_labels = [r'$-\pi$', r'$-\pi/2$', r'$0$', r'$\pi/2$', r'$\pi$']
+if phi_zoom.min() > -np.pi/2 - 0.1 and phi_zoom.max() < np.pi/2 + 0.1:
+    ticks = [-np.pi/2, -np.pi/4, 0, np.pi/4, np.pi/2]
+    tick_labels = [r'$-\pi/2$', r'$-\pi/4$', r'$0$', r'$\pi/4$', r'$\pi/2$']
+
+cbar3_nd.set_ticks(ticks)
+cbar3_nd.set_ticklabels(tick_labels)
+
+ax3_nd.set_title(f'Shear Phase ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+ax3_nd.set_xlabel('RA [deg]')
+ax3_nd.set_ylabel('Dec [deg]')
+
+plt.tight_layout(pad=0.3)
+plt.savefig("outfiles/Demo_Defects_nomarkers.png", dpi=300, bbox_inches='tight')
+print("Saved plot to outfiles/Demo_Defects_nomarkers.png")
+
+# --- Minimal single-field panels (no labels/axes/colorbars/defects) ---
+print("Plotting minimalist single-field panels...")
+minimal_panels = [
+    (conv_zoom, 'RdYlBu_r', "outfiles/Demo_Defects_conv_clean.png", True),
+    (shear_zoom, 'plasma', "outfiles/Demo_Defects_shear_clean.png", True),
+    (phi_zoom, 'twilight', "outfiles/Demo_Defects_phase_clean.png", False),
+]
+
+# Recreate coarse sampling grid so quiver white lines remain on relevant panels
+step_clean = 8
+x_deg_clean = np.linspace(0, FoV_zoom, limit_pix)
+y_deg_clean = np.linspace(0, FoV_zoom, limit_pix)
+X_clean, Y_clean = np.meshgrid(x_deg_clean, y_deg_clean)
+
+for data, cmap, out_path, add_quiver in minimal_panels:
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.imshow(data, origin='lower', cmap=cmap, extent=extent)
+    if add_quiver:
+        ax.quiver(X_clean[::step_clean, ::step_clean],
+                  Y_clean[::step_clean, ::step_clean],
+                  ux_zoom[::step_clean, ::step_clean],
+                  uy_zoom[::step_clean, ::step_clean],
+                  angles='xy', scale_units='xy',
+                  color='white', width=0.004, alpha=0.7,
+                  headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+    ax.set_axis_off()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
+    plt.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
+    print(f"Saved plot to {out_path}")
+
+# --- Single-field panels with colorbars ---
+print("Plotting single-field panels with colorbars...")
+colorbar_panels = [
+    (conv_zoom, 'RdYlBu_r', "outfiles/Demo_Defects_conv_cb.png", True, r'$\kappa$'),
+    (shear_zoom, 'plasma', "outfiles/Demo_Defects_shear_cb.png", True, r'$|\gamma|$'),
+    (phi_zoom, 'twilight', "outfiles/Demo_Defects_phase_cb.png", False, r'$\varphi$'),
+]
+
+for data, cmap, out_path, add_quiver, cbar_label in colorbar_panels:
+    fig, ax = plt.subplots(figsize=(6, 6))
+    im = ax.imshow(data, origin='lower', cmap=cmap, extent=extent)
+    if add_quiver:
+        ax.quiver(X_clean[::step_clean, ::step_clean],
+                  Y_clean[::step_clean, ::step_clean],
+                  ux_zoom[::step_clean, ::step_clean],
+                  uy_zoom[::step_clean, ::step_clean],
+                  angles='xy', scale_units='xy',
+                  color='white', width=0.004, alpha=0.7,
+                  headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+    ax.set_axis_off()
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
+    cbar.set_label(cbar_label, fontsize=12)
+    fig.subplots_adjust(left=0, right=0.95, bottom=0, top=0.95)
+    plt.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0, transparent=True)
+    plt.close(fig)
+    print(f"Saved plot to {out_path}")

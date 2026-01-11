@@ -26,6 +26,7 @@ for i in tqdm(range(N)):
     bin_edges = np.linspace(-0.02, 0.03, 30)
     df = DefectFinder(f"{OM02_DIR}/angles_s467_{i}_LCDM_Om02_ks_nomask_shear.npz")
     df.load_defects(f"{OM02_DIR}/defects_s467_{i}_LCDM_Om02_ks_nomask_shear.npz")
+    print(df.number())
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
     kappa_pos = df.convergence_dist(charge=0.5)
     kappa_pos_cum = np.array([np.sum(kappa_pos < b) for b in bin_edges]) / 25 * (180/np.pi)**2 

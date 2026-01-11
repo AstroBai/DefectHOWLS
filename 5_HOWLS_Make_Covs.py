@@ -39,7 +39,7 @@ for i in tqdm(range(N)):
     bin_edges2 = data['bin_edges2']
     bin_edges4 = data['bin_edges4']
     bin_edges8 = data['bin_edges8']
-    kappa = data['kappa']
+    kappa = data['kappa'][:-2]
     kappa_pos_cum = data['kappa_pos_cum']
     kappa_neg_cum = data['kappa_neg_cum']
     nn_pos_same1_cum = data['nn_pos_same1_cum']
@@ -133,6 +133,8 @@ all_mean = np.concatenate([kappa_pos_mean, kappa_neg_mean,
                            nn_pos_same2_mean, nn_neg_same2_mean, nn_pos_opp2_mean, nn_neg_opp2_mean,
                            nn_pos_same4_mean, nn_neg_same4_mean, nn_pos_opp4_mean, nn_neg_opp4_mean,
                            nn_pos_same8_mean, nn_neg_same8_mean, nn_pos_opp8_mean, nn_neg_opp8_mean])
+all_and_pdf_mean = np.concatenate([all_mean, kappa_mean])
+all_howls_and_kk_mean = np.concatenate([all_and_pdf_mean, kk_mean])
 
 kk_cov = np.cov(kk_list, rowvar=False)
 kappa_cov = np.cov(kappa_list, rowvar=False)
@@ -168,6 +170,18 @@ all_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list]), rowvar=False)
+all_and_pdf_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list]), rowvar=False)
+all_howls_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list, kk_list]), rowvar=False)
 np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
@@ -202,6 +216,8 @@ np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz",
          nn_4_mean=nn_4_mean,
          nn_8_mean=nn_8_mean,
          nn_all_mean=nn_all_mean,
+         all_and_pdf_mean=all_and_pdf_mean,
+         all_howls_and_kk_mean=all_howls_and_kk_mean,
         kappa_cov=kappa_cov,
          kappa_pos_cov=kappa_pos_cov,
          kappa_neg_cov=kappa_neg_cov,
@@ -228,7 +244,9 @@ np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz",
          nn_8_cov=nn_8_cov,
          nn_all_cov=nn_all_cov,
          all_cov=all_cov,
-            kk_cov=kk_cov
+            kk_cov=kk_cov,
+            all_and_pdf_cov=all_and_pdf_cov,
+            all_howls_and_kk_cov=all_howls_and_kk_cov
          )
 
 # =======================================================================
@@ -264,7 +282,7 @@ for i in tqdm(range(N)):
     bin_edges8 = data['bin_edges8']
     theta = data['theta']
     kk = data['kk']
-    kappa = data['kappa']
+    kappa = data['kappa'][:-2]
     kappa_pos_cum = data['kappa_pos_cum']
     kappa_neg_cum = data['kappa_neg_cum']
     nn_pos_same1_cum = data['nn_pos_same1_cum']
@@ -357,6 +375,8 @@ all_mean = np.concatenate([kappa_pos_mean, kappa_neg_mean,
                            nn_pos_same2_mean, nn_neg_same2_mean, nn_pos_opp2_mean, nn_neg_opp2_mean,
                            nn_pos_same4_mean, nn_neg_same4_mean, nn_pos_opp4_mean, nn_neg_opp4_mean,
                            nn_pos_same8_mean, nn_neg_same8_mean, nn_pos_opp8_mean, nn_neg_opp8_mean])
+all_and_pdf_mean = np.concatenate([all_mean, kappa_mean])
+all_howls_and_kk_mean = np.concatenate([all_and_pdf_mean, kk_mean])
 kk_cov = np.cov(kk_list, rowvar=False)
 kappa_cov = np.cov(kappa_list, rowvar=False)
 kappa_pos_cov = np.cov(kappa_pos_list, rowvar=False)
@@ -391,6 +411,18 @@ all_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list]), rowvar=False)
+all_and_pdf_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list]), rowvar=False)
+all_howls_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list, kk_list]), rowvar=False)
 np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
@@ -425,6 +457,8 @@ np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz",
          nn_8_mean=nn_8_mean,
          nn_all_mean=nn_all_mean,
             all_mean=all_mean,
+            all_and_pdf_mean=all_and_pdf_mean,
+            all_howls_and_kk_mean=all_howls_and_kk_mean,
         kappa_cov=kappa_cov,
          kappa_pos_cov=kappa_pos_cov,
          kappa_neg_cov=kappa_neg_cov,
@@ -452,6 +486,8 @@ np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz",
          nn_all_cov=nn_all_cov,
          all_cov=all_cov,
          kk_cov=kk_cov,
+         all_and_pdf_cov=all_and_pdf_cov,
+         all_howls_and_kk_cov=all_howls_and_kk_cov
          )
 
 # =======================================================================
@@ -488,7 +524,7 @@ for i in tqdm(range(N)):
     bin_edges8 = data['bin_edges8']
     theta = data['theta']
     kk = data['kk']
-    kappa = data['kappa']
+    kappa = data['kappa'][:-2]
     kappa_pos_cum = data['kappa_pos_cum']
     kappa_neg_cum = data['kappa_neg_cum']
     nn_pos_same1_cum = data['nn_pos_same1_cum']
@@ -580,6 +616,8 @@ all_mean = np.concatenate([kappa_pos_mean, kappa_neg_mean,
                            nn_pos_same2_mean, nn_neg_same2_mean, nn_pos_opp2_mean, nn_neg_opp2_mean,
                            nn_pos_same4_mean, nn_neg_same4_mean, nn_pos_opp4_mean, nn_neg_opp4_mean,
                            nn_pos_same8_mean, nn_neg_same8_mean, nn_pos_opp8_mean, nn_neg_opp8_mean])
+all_and_pdf_mean = np.concatenate([all_mean, kappa_mean])
+all_howls_and_kk_mean = np.concatenate([all_and_pdf_mean, kk_mean])
 
 kk_cov = np.cov(kk_list, rowvar=False)
 kappa_cov = np.cov(kappa_list, rowvar=False)
@@ -615,6 +653,18 @@ all_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list]), rowvar=False)
+all_and_pdf_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list]), rowvar=False)
+all_howls_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list, kk_list]), rowvar=False)
 np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
@@ -649,6 +699,8 @@ np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467.npz",
          nn_8_mean=nn_8_mean,
          nn_all_mean=nn_all_mean,
             all_mean=all_mean,
+            all_and_pdf_mean=all_and_pdf_mean,
+            all_howls_and_kk_mean=all_howls_and_kk_mean,
         kappa_cov=kappa_cov,
          kappa_pos_cov=kappa_pos_cov,
          kappa_neg_cov=kappa_neg_cov,
@@ -675,7 +727,9 @@ np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467.npz",
          nn_8_cov=nn_8_cov,
          nn_all_cov=nn_all_cov,
          all_cov=all_cov,
-         kk_cov=kk_cov
+         kk_cov=kk_cov,
+         all_and_pdf_cov=all_and_pdf_cov,
+         all_howls_and_kk_cov=all_howls_and_kk_cov
          )
 
 # =======================================================================
@@ -711,7 +765,7 @@ for i in tqdm(range(N)):
     bin_edges8 = data['bin_edges8']
     theta = data['theta']
     kk = data['kk']
-    kappa = data['kappa']
+    kappa = data['kappa'][:-2]
     kappa_pos_cum = data['kappa_pos_cum']
     kappa_neg_cum = data['kappa_neg_cum']
     nn_pos_same1_cum = data['nn_pos_same1_cum']
@@ -803,6 +857,8 @@ all_mean = np.concatenate([kappa_pos_mean, kappa_neg_mean,
                            nn_pos_same2_mean, nn_neg_same2_mean, nn_pos_opp2_mean, nn_neg_opp2_mean,
                            nn_pos_same4_mean, nn_neg_same4_mean, nn_pos_opp4_mean, nn_neg_opp4_mean,
                            nn_pos_same8_mean, nn_neg_same8_mean, nn_pos_opp8_mean, nn_neg_opp8_mean])
+all_and_pdf_mean = np.concatenate([all_mean, kappa_mean])
+all_howls_and_kk_mean = np.concatenate([all_and_pdf_mean, kk_mean])
 
 kk_cov = np.cov(kk_list, rowvar=False)
 kappa_cov = np.cov(kappa_list, rowvar=False)
@@ -838,6 +894,18 @@ all_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list]), rowvar=False)
+all_and_pdf_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list]), rowvar=False)
+all_howls_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list, kk_list]), rowvar=False)
 np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
@@ -872,6 +940,8 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467.npz",
          nn_8_mean=nn_8_mean,
          nn_all_mean=nn_all_mean,
             all_mean=all_mean,
+            all_and_pdf_mean=all_and_pdf_mean,
+            all_howls_and_kk_mean=all_howls_and_kk_mean,
         kappa_cov=kappa_cov,
          kappa_pos_cov=kappa_pos_cov,
          kappa_neg_cov=kappa_neg_cov,
@@ -898,7 +968,9 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467.npz",
          nn_8_cov=nn_8_cov,
          nn_all_cov=nn_all_cov,
          all_cov=all_cov,
-         kk_cov=kk_cov
+         kk_cov=kk_cov,
+         all_and_pdf_cov=all_and_pdf_cov,
+         all_howls_and_kk_cov=all_howls_and_kk_cov
          )
 
 # =======================================================================
@@ -935,7 +1007,7 @@ for i in tqdm(range(N)):
         bin_edges8 = data['bin_edges8']
         theta = data['theta']
         kk = data['kk']
-        kappa = data['kappa']
+        kappa = data['kappa'][:-2]
         kappa_pos_cum = data['kappa_pos_cum']
         kappa_neg_cum = data['kappa_neg_cum']
         nn_pos_same1_cum = data['nn_pos_same1_cum']
@@ -1028,6 +1100,8 @@ all_mean = np.concatenate([kappa_pos_mean, kappa_neg_mean, nn_pos_same1_mean, nn
                            nn_pos_same2_mean, nn_neg_same2_mean, nn_pos_opp2_mean, nn_neg_opp2_mean,
                            nn_pos_same4_mean, nn_neg_same4_mean, nn_pos_opp4_mean, nn_neg_opp4_mean,
                            nn_pos_same8_mean, nn_neg_same8_mean, nn_pos_opp8_mean, nn_neg_opp8_mean])
+all_and_pdf_mean = np.concatenate([all_mean, kappa_mean])
+all_howls_and_kk_mean = np.concatenate([all_and_pdf_mean, kk_mean])
 
 kk_cov = np.cov(kk_list, rowvar=False)
 kappa_cov = np.cov(kappa_list, rowvar=False)
@@ -1063,6 +1137,18 @@ all_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list]), rowvar=False)
+all_and_pdf_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list]), rowvar=False)
+all_howls_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
+                            nn_pos_same1_list, nn_neg_same1_list, nn_pos_opp1_list, nn_neg_opp1_list,
+                            nn_pos_same2_list, nn_neg_same2_list, nn_pos_opp2_list, nn_neg_opp2_list,
+                            nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
+                            nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
+                            kappa_list, kk_list]), rowvar=False)
 np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
@@ -1097,6 +1183,8 @@ np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467.npz",
          nn_8_mean=nn_8_mean,
          nn_all_mean=nn_all_mean,
             all_mean=all_mean,
+            all_and_pdf_mean=all_and_pdf_mean,
+            all_howls_and_kk_mean=all_howls_and_kk_mean,
         kappa_cov=kappa_cov,
          kappa_pos_cov=kappa_pos_cov,
          kappa_neg_cov=kappa_neg_cov,
@@ -1123,5 +1211,7 @@ np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467.npz",
          nn_8_cov=nn_8_cov,
          nn_all_cov=nn_all_cov,
          all_cov=all_cov,
-         kk_cov=kk_cov
+         kk_cov=kk_cov,
+         all_and_pdf_cov=all_and_pdf_cov,
+         all_howls_and_kk_cov=all_howls_and_kk_cov
          )
