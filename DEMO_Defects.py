@@ -61,6 +61,18 @@ for pix, wnum in defects.items():
     if 0 <= r < limit_pix and 0 <= c < limit_pix:
         defects_zoom[(r, c)] = wnum
 
+
+def plot_defect_markers(ax):
+    for (r, c), wnum in defects_zoom.items():
+        x_pos = (c / limit_pix) * FoV_zoom
+        y_pos = (r / limit_pix) * FoV_zoom
+        color = 'red' if wnum > 0 else 'royalblue'
+        sign = '+' if wnum > 0 else '-'
+        ax.scatter(x_pos, y_pos, c=color, marker='o', s=100,
+                   edgecolors='white', linewidth=1, zorder=10)
+        ax.text(x_pos, y_pos, sign, ha='center', va='center', color='white',
+                fontsize=10, fontweight='bold', zorder=11)
+
 # 3. Plotting
 print("Plotting...")
 # Changed to 3 subplots, increased figure width
@@ -307,6 +319,34 @@ for data, cmap, out_path, add_quiver, cbar_label in colorbar_panels:
                   angles='xy', scale_units='xy',
                   color='white', width=0.004, alpha=0.7,
                   headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+    ax.set_axis_off()
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
+    cbar.set_label(cbar_label, fontsize=12)
+    fig.subplots_adjust(left=0, right=0.95, bottom=0, top=0.95)
+    plt.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0, transparent=True)
+    plt.close(fig)
+    print(f"Saved plot to {out_path}")
+
+# --- Single-field panels with defects + colorbars (no other labels) ---
+print("Plotting single-field panels with defects and colorbars...")
+defect_cb_panels = [
+    (conv_zoom, 'RdYlBu_r', "outfiles/Demo_Defects_conv_defect_cb.png", True, r'$\kappa$'),
+    (shear_zoom, 'plasma', "outfiles/Demo_Defects_shear_defect_cb.png", True, r'$|\gamma|$'),
+    (phi_zoom, 'twilight', "outfiles/Demo_Defects_phase_defect_cb.png", False, r'$\varphi$'),
+]
+
+for data, cmap, out_path, add_quiver, cbar_label in defect_cb_panels:
+    fig, ax = plt.subplots(figsize=(6, 6))
+    im = ax.imshow(data, origin='lower', cmap=cmap, extent=extent)
+    if add_quiver:
+        ax.quiver(X_clean[::step_clean, ::step_clean],
+                  Y_clean[::step_clean, ::step_clean],
+                  ux_zoom[::step_clean, ::step_clean],
+                  uy_zoom[::step_clean, ::step_clean],
+                  angles='xy', scale_units='xy',
+                  color='white', width=0.004, alpha=0.7,
+                  headwidth=0, headlength=0, headaxislength=0, pivot='mid')
+    plot_defect_markers(ax)
     ax.set_axis_off()
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     cbar.set_label(cbar_label, fontsize=12)

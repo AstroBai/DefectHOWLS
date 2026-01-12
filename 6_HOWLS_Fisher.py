@@ -13,7 +13,7 @@ data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz")
 data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz")
 data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467.npz")
 data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_subfields.npz")
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -118,7 +118,7 @@ nn_all_deriv = np.array(nn_all_deriv)
 all_deriv = np.array(all_deriv) 
 kk_deriv = np.array(kk_deriv)
 
-area_scaling = 100 / 15000 # euclid
+area_scaling = 100 / 15000 / 4  # euclid
 kappa_cov = data_slics['kappa_cov'] * area_scaling
 kappa_pos_cov = data_slics['kappa_pos_cov'] * area_scaling
 kappa_neg_cov = data_slics['kappa_neg_cov'] * area_scaling
@@ -149,7 +149,7 @@ kk_cov = data_slics['kk_cov'] * area_scaling
 all_and_pdf_cov = data_slics['all_and_pdf_cov'] * area_scaling  
 all_howls_and_kk_cov = data_slics['all_howls_and_kk_cov'] * area_scaling
 
-n=924
+n=924 * 4
 kappa_inv_cov = np.linalg.inv(kappa_cov) * (n-28-2) / (n-1)
 kappa_pos_inv_cov = np.linalg.inv(kappa_pos_cov) * (n-30-2) / (n-1)
 kappa_neg_inv_cov = np.linalg.inv(kappa_neg_cov) * (n-30-2) / (n-1)

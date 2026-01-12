@@ -13,7 +13,7 @@ data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz")
 data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz")
 data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467.npz")
 data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_subfields.npz")
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
