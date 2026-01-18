@@ -350,5 +350,5 @@ class DefectFinder:
                 total_defects += 2
                 n_neg += 2
         self.defect_count = total_defects  
-        n = total_defects / (4 * np.pi)  # number per steradian
+        n = total_defects
         return n, n_pos, n_neg

@@ -4,11 +4,9 @@
 #SBATCH --error=job-%N-%j.error            # set error log name %N=first node, %j=job number
 #SBATCH --job-name=HOWLS_Pipeline         # set job name
 #SBATCH -p all                             # set partition (queue)
-#SBATCH --nodes=1                          # set node number
-#SBATCH --ntasks-per-node=1                # set task number
-#SBATCH --mem-per-cpu=4GB                  # set memory per core
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=64G
 #SBATCH --mail-type=ALL                    # set mail alerts
-# Uncomment line below to get more emails.
 #SBATCH --mail-user=j.bai@ed.ac.uk # set mail address
 
 ./HOWLSPipeline.sh

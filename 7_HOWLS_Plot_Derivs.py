@@ -250,6 +250,44 @@ plt.legend()
 plt.savefig('outfiles/compare_cdf.png', dpi=300, bbox_inches='tight')
 plt.close()
 
+# omegam+ cdf, omegam- cdf, fid cdf | sigma8+ cdf, sigma8- cdf, fid cdf
+kappa_pos_om02 = data_om02['kappa_pos_mean']
+kappa_pos_om04 = data_om04['kappa_pos_mean']
+kappa_neg_om02 = data_om02['kappa_neg_mean']
+kappa_neg_om04 = data_om04['kappa_neg_mean']
+kappa_pos_s807 = data_s807['kappa_pos_mean']
+kappa_pos_s809 = data_s809['kappa_pos_mean']
+kappa_neg_s807 = data_s807['kappa_neg_mean']
+kappa_neg_s809 = data_s809['kappa_neg_mean']
+plt.figure(figsize=(4, 3))
+fig, axes = plt.subplots(1, 2, figsize=(8, 3), sharey=True)
+# Omegam
+ax = axes[0]
+ax.plot(bin_edges, kappa_pos_fid, label='Fiducial DCDF+', c='black')
+ax.plot(bin_edges, kappa_neg_fid, label='Fiducial DCDF-', c='grey')
+ax.plot(bin_edges, kappa_pos_om04, label=r'$\Omega_m+$ DCDF+', c=color_map(0))
+ax.plot(bin_edges, kappa_pos_om02, label=r'$\Omega_m-$ DCDF+', c=color_map(0), linestyle='dashed')
+ax.plot(bin_edges, kappa_neg_om04, label=r'$\Omega_m+$ DCDF-', c=color_map(1))
+ax.plot(bin_edges, kappa_neg_om02, label=r'$\Omega_m-$ DCDF-', c=color_map(1), linestyle='dashed')
+ax.set_xlabel(r'$\kappa$')
+ax.set_ylabel(r'$C^{p,n}(\kappa)$')
+ax.set_title(r'Effect of $\Omega_m$ on DCDFs')
+# Sigma8
+ax = axes[1]
+ax.plot(bin_edges, kappa_pos_fid, label='Fiducial DCDF+', c='black')
+ax.plot(bin_edges, kappa_neg_fid, label='Fiducial DCDF-', c='grey')
+ax.plot(bin_edges, kappa_pos_s809, label=r'$\sigma_8+$ DCDF+', c=color_map(0))
+ax.plot(bin_edges, kappa_pos_s807, label=r'$\sigma_8-$ DCDF+', c=color_map(0), linestyle='dashed')
+ax.plot(bin_edges, kappa_neg_s809, label=r'$\sigma_8+$ DCDF-', c=color_map(1))
+ax.plot(bin_edges, kappa_neg_s807, label=r'$\sigma_8-$ DCDF-', c=color_map(1), linestyle='dashed')
+ax.set_xlabel(r'$\kappa$')
+ax.set_title(r'Effect of $\sigma_8$ on DCDFs')
+plt.legend(loc='upper left', bbox_to_anchor=(1.05, 0.55))
+plt.subplots_adjust(wspace=0)
+# plt.grid(True, alpha=0.3)
+plt.savefig('outfiles/sg8_om_cdf.png', dpi=300, bbox_inches='tight')
+plt.close() 
+
 # dpdf, pdf cov
 
 all_and_pdf_cov = data_slics['all_and_pdf_cov']

@@ -1,6 +1,134 @@
 from tqdm import tqdm
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde, norm
+
+def calculate_kl(data_vec):
+    """Calculates KL(P || Q) where P is data, Q is Gaussian approximation."""
+    mu, std = np.mean(data_vec), np.std(data_vec)
+    if std == 0: return 0.0
+    
+    # Discretize for KL calc
+    hist, bin_edges = np.histogram(data_vec, bins=50, density=True)
+    pk = hist * np.diff(bin_edges) # probabilities
+    
+    # Ensure bin centers
+    x = (bin_edges[:-1] + bin_edges[1:]) / 2
+    qk = norm.pdf(x, mu, std) * np.diff(bin_edges)
+    
+    # Avoid log(0) and division by zero
+    pk = np.where(pk == 0, 1e-10, pk)
+    qk = np.where(qk == 0, 1e-10, qk)
+    
+    return np.sum(pk * np.log(pk / qk))
+
+def get_bin_coords(name):
+    # Bin definitions provided by user
+    bin_edges_kappa = np.linspace(-0.05, 0.05, 100)
+    bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    
+    if name == "kappa":
+        centers = (bin_edges_kappa[:-1] + bin_edges_kappa[1:]) / 2
+        return centers[:-2] # Adjust for slice
+    
+    # Cumulative stats use bin edges
+    if name in ["kappa_pos", "kappa_neg"]:
+        return bin_edges_kappa
+        
+    if "nn_" in name:
+        if "1" in name: return bin_edges1
+        if "2" in name: return bin_edges2
+        if "4" in name: return bin_edges4
+        if "8" in name: return bin_edges8
+        
+    if name == "kk":
+        # Use theta from data_slics if available, otherwise approximation
+        try:
+            # Access global data_slics if available
+            return data_slics['theta']
+        except:
+             # Fallback if global not ready (though it should be called after load)
+             return np.logspace(np.log10(0.59), np.log10(100), 100)
+             
+    return None
+
+def plot_ridgeline_kl(data_matrix, mask, title, filename_suffix):
+    """
+    Plots vertical ridgeline plot with KL annotations for kept bins.
+    """
+    if mask.sum() == 0:
+        return
+
+    kept_indices = np.where(mask)[0]
+    selected_data = data_matrix[:, kept_indices]
+    n_plot_bins = len(kept_indices)
+    
+    # Vertical layout
+    fig, ax = plt.subplots(figsize=(max(6, n_plot_bins * 0.4), 8))
+    
+    overlap = 0.5
+    colors = plt.cm.viridis(np.linspace(0, 1, n_plot_bins))
+
+    for i, bin_idx in enumerate(kept_indices):
+        x_data = selected_data[:, i]
+        
+        kl = calculate_kl(x_data)
+
+        if np.var(x_data) == 0:
+            continue
+            
+        kde = gaussian_kde(x_data)
+        y_grid = np.linspace(x_data.min(), x_data.max(), 100)
+        x_density = kde(y_grid)
+        
+        if x_density.max() > 0:
+            x_density = x_density / x_density.max() * (1 + overlap)
+        
+        baseline = i
+        ax.fill_betweenx(y_grid, baseline, baseline + x_density, color=colors[i], alpha=0.7, zorder=n_plot_bins-i)
+        ax.plot(baseline + x_density, y_grid, color='white', lw=1, zorder=n_plot_bins-i)
+        
+        ax.text(baseline + 0.1, y_grid.min(), f"KL={kl:.3f}", rotation=90, va='top', fontsize=7, zorder=n_plot_bins-i+1)
+
+    ax.set_xticks(np.arange(len(kept_indices)))
+    
+    # Generate labels based on physical coordinates
+    coords = get_bin_coords(filename_suffix)
+    labels = []
+    
+    for idx in kept_indices:
+        if coords is not None and idx < len(coords):
+            if filename_suffix == "kk": # Log scale for theta usually
+                 labels.append(f"{coords[idx]:.1f}")
+            elif "kappa" in filename_suffix and "pos" not in filename_suffix and "neg" not in filename_suffix:
+                 labels.append(f"{coords[idx]:.4f}")
+            else:
+                 labels.append(f"{coords[idx]:.1f}")
+        else:
+            labels.append(f"Bin {idx}")
+            
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_title(title)
+    if "nn_" in filename_suffix:
+        ax.set_xlabel("Scale [arcmin]")
+    elif filename_suffix == "kk":
+        ax.set_xlabel("Theta [arcmin]")
+    elif "kappa" in filename_suffix:
+        ax.set_xlabel("Kappa")
+        
+    ax.set_ylabel("Value")
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    plt.tight_layout()
+    os.makedirs("outfiles/Fisher_Ridgelines", exist_ok=True)
+    plt.savefig(f"outfiles/Fisher_Ridgelines/{filename_suffix}.png", dpi=300)
+    plt.close()
 
 DATA_DIR = "/cephfs/jbai/HOWLS_Data"
 OM02_DIR = f"{DATA_DIR}/LCDM_Om02_ks_nomask_shear_new"
@@ -9,11 +137,237 @@ S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
 S809_DIR = f"{DATA_DIR}/LCDM_s80976624_ks_nomask_shear_new"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_subfields.npz")
+def load_slics_samples(slics_dir, n_files=1000):
+    print("Loading SLICS samples for KL calculation...")
+    
+    # Initialize lists
+    keys = ['kappa', 'kappa_pos_cum', 'kappa_neg_cum', 
+            'nn_pos_same1_cum', 'nn_neg_same1_cum', 'nn_pos_opp1_cum', 'nn_neg_opp1_cum',
+            'nn_pos_same2_cum', 'nn_neg_same2_cum', 'nn_pos_opp2_cum', 'nn_neg_opp2_cum',
+            'nn_pos_same4_cum', 'nn_neg_same4_cum', 'nn_pos_opp4_cum', 'nn_neg_opp4_cum',
+            'nn_pos_same8_cum', 'nn_neg_same8_cum', 'nn_pos_opp8_cum', 'nn_neg_opp8_cum',
+            'kk']
+            
+    samples = {k: [] for k in keys}
+    
+    # We use 1000 realizations as default per MakeCovs script
+    count = 0
+    for i in tqdm(range(n_files), desc="Loading SLICS"):
+        for subfield in range(4):
+            try:
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
+                if not os.path.exists(filepath):
+                    continue
+                
+                with np.load(filepath) as data:
+                    # Special handling for kappa truncation
+                    if 'kappa' in data:
+                        samples['kappa'].append(data['kappa'][:-2])
+                    
+                    # Direct mapping for others
+                    for k in keys:
+                        if k == 'kappa': continue
+                        if k in data:
+                            samples[k].append(data[k])
+                count += 1
+            except Exception as e:
+                pass
+    
+    print(f"Loaded {count} samples.")
+
+    final_samples = {}
+    # Name mapping to match code variables
+    name_map = {
+        'kappa': 'kappa', 'kk': 'kk',
+        'kappa_pos_cum': 'kappa_pos', 'kappa_neg_cum': 'kappa_neg',
+        'nn_pos_same1_cum': 'nn_pos_same1', 'nn_neg_same1_cum': 'nn_neg_same1',
+        'nn_pos_opp1_cum': 'nn_pos_opp1', 'nn_neg_opp1_cum': 'nn_neg_opp1',
+        'nn_pos_same2_cum': 'nn_pos_same2', 'nn_neg_same2_cum': 'nn_neg_same2',
+        'nn_pos_opp2_cum': 'nn_pos_opp2', 'nn_neg_opp2_cum': 'nn_neg_opp2',
+        'nn_pos_same4_cum': 'nn_pos_same4', 'nn_neg_same4_cum': 'nn_neg_same4',
+        'nn_pos_opp4_cum': 'nn_pos_opp4', 'nn_neg_opp4_cum': 'nn_neg_opp4',
+        'nn_pos_same8_cum': 'nn_pos_same8', 'nn_neg_same8_cum': 'nn_neg_same8',
+        'nn_pos_opp8_cum': 'nn_pos_opp8', 'nn_neg_opp8_cum': 'nn_neg_opp8'
+    }
+    
+    for k, v in samples.items():
+        if len(v) > 0:
+            final_samples[name_map[k]] = np.array(v)
+            
+    return final_samples
+
+n_realizations = 924 * 4
+
+def filter_data_block(name, fid_vec, deriv, cov, n_realizations, samples=None, sigma_thresh=2.0):
+    # First filter: remove bins with low signal-to-noise
+    sigma = np.sqrt(np.diag(cov))
+    mask = np.abs(fid_vec) > sigma_thresh * sigma
+    
+    # KL Filter
+    if samples is not None:
+        kl_values = np.zeros(fid_vec.shape[0])
+        # Calculate KL only for S/N passed bins
+        for i in range(fid_vec.shape[0]):
+             if mask[i]:
+                 kl_values[i] = calculate_kl(samples[:, i])
+        
+        original_count = mask.sum()
+        mask = mask & (kl_values <= 0.1)
+        kl_removed_count = original_count - mask.sum()
+        if kl_removed_count > 0:
+            print(f"{name}: removed {kl_removed_count} bins due to KL > 0.1")
+
+    if mask.sum() == 0:
+        # Fallback: keep all if none survive? Or raise error?
+        # If strict, raise error. But for robustness, maybe warn.
+        # User saw "no bins survive" mostly due to double filtering. 
+        # With clean filtering, if truly no bins survive, it's a data issue.
+        # However, to be safe against crash, let's keep S/N ones if KL fails all?
+        # sticking to original logic:
+        pass # raise ValueError below if still 0
+        
+    if mask.sum() == 0:
+        print(f"WARNING: {name}: no bins survive S/N + KL cuts. Using all bins as fallback (dangerous).")
+        mask[:] = True
+
+    # Apply first cut
+    cov_trim = cov[np.ix_(mask, mask)]
+    
+    # Second filter: remove bins with 100% correlation
+    sigma_trim = np.sqrt(np.diag(cov_trim))
+    # Avoid div by zero
+    sigma_trim[sigma_trim == 0] = 1.0
+    
+    corr = cov_trim / np.outer(sigma_trim, sigma_trim)
+    
+    # Find pairs with |correlation| >= 0.9999
+    corr_mask = np.ones(corr.shape[0], dtype=bool)
+    for i in range(corr.shape[0]):
+        if not corr_mask[i]: continue
+        for j in range(i + 1, corr.shape[0]):
+            if not corr_mask[j]: continue
+            if np.abs(corr[i, j]) >= 0.9999:
+                # Remove the bin with lower S/N
+                idx_i = np.where(mask)[0][i]
+                idx_j = np.where(mask)[0][j]
+                
+                # Check sigma != 0
+                s_i = sigma[idx_i] if sigma[idx_i] > 0 else 1.0
+                s_j = sigma[idx_j] if sigma[idx_j] > 0 else 1.0
+                
+                sn_i = np.abs(fid_vec[idx_i]) / s_i
+                sn_j = np.abs(fid_vec[idx_j]) / s_j
+                
+                if sn_i <= sn_j:
+                    corr_mask[i] = False
+                else:
+                    corr_mask[j] = False
+    
+    if corr_mask.sum() == 0:
+        print(f"WARNING: {name}: no bins survive Correlation cuts. Using previous mask.")
+    else:
+        # Update mask
+        original_indices = np.where(mask)[0]
+        final_indices = original_indices[corr_mask]
+        mask = np.zeros_like(mask)
+        mask[final_indices] = True
+    
+    kept_indices = np.where(mask)[0]
+    
+    # Plot Ridgelines
+    if samples is not None:
+        plot_ridgeline_kl(samples, mask, f"{name} Distribution", name)
+
+    print(f"{name} final kept bins: {kept_indices.tolist()} (Count: {len(kept_indices)})")
+    
+    # Apply final mask
+    cov_final = cov[np.ix_(mask, mask)]
+    # Hartlap
+    hartlap = (n_realizations - mask.sum() - 2) / (n_realizations - 1)
+    if mask.sum() >= n_realizations - 2:
+        print(f"WARNING: {name}: too many bins ({mask.sum()}) for Hartlap correction (N={n_realizations}). InvCov might be unstable.")
+        hartlap = 1.0 
+        
+    try:
+        inv_cov = np.linalg.inv(cov_final) * hartlap
+    except np.linalg.LinAlgError:
+        print(f"ERROR: {name}: Singular matrix. Using pseudo-inverse.")
+        inv_cov = np.linalg.pinv(cov_final) * hartlap
+
+    return deriv[:, mask], cov_final, inv_cov, mask
+
+class FisherDataBlock:
+    def __init__(self, name, deriv, cov, n_realizations, fid_vec=None, samples=None, mask=None, inv_cov=None, final_cov=None, final_deriv=None):
+        self.name = name
+        self.deriv = deriv
+        self.cov = cov
+        self.n = n_realizations
+        self.samples = samples
+        self.fid_vec = fid_vec
+        self.mask = mask
+        self.inv_cov = inv_cov
+        self.final_cov = final_cov
+        self.final_deriv = final_deriv
+
+    def filter(self):
+        # Wrapper for filter_data_block
+        fd, fc, ic, m = filter_data_block(self.name, self.fid_vec, self.deriv, self.cov, self.n, samples=self.samples)
+        self.final_deriv = fd
+        self.final_cov = fc
+        self.inv_cov = ic
+        self.mask = m
+        return self
+
+    @classmethod
+    def combine(cls, name, components, combined_deriv, combined_cov, n_realizations, samples=None):
+        # Combine masks from components
+        full_mask = np.hstack([c.mask for c in components])
+        
+        # Apply combined mask
+        cov_final = combined_cov[np.ix_(full_mask, full_mask)]
+        hartlap = (n_realizations - full_mask.sum() - 2) / (n_realizations - 1)
+        
+        try:
+             inv_cov = np.linalg.inv(cov_final) * hartlap
+        except np.linalg.LinAlgError:
+             print(f"ERROR: {name}: Singular matrix in combine. Using pseudo-inverse.")
+             inv_cov = np.linalg.pinv(cov_final) * hartlap
+             
+        deriv_final = combined_deriv[:, full_mask]
+        
+        print(f"{name}: Combined mask kept {full_mask.sum()} / {len(full_mask)} bins")
+        
+        return cls(name, combined_deriv, combined_cov, n_realizations, 
+                   samples=samples, mask=full_mask, inv_cov=inv_cov, 
+                   final_cov=cov_final, final_deriv=deriv_final)
+
+def create_block(name, key_mean, key_deriv, key_cov, key_samples):
+    return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
+
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
+
+slics_samples = load_slics_samples(SLICS_DIR)
+
+# Construct composite samples
+slics_samples['kappa_all'] = np.hstack([slics_samples['kappa_pos'], slics_samples['kappa_neg']])
+slics_samples['nn_1'] = np.hstack([slics_samples['nn_pos_same1'], slics_samples['nn_neg_same1'], 
+                                   slics_samples['nn_pos_opp1'], slics_samples['nn_neg_opp1']])
+slics_samples['nn_2'] = np.hstack([slics_samples['nn_pos_same2'], slics_samples['nn_neg_same2'], 
+                                   slics_samples['nn_pos_opp2'], slics_samples['nn_neg_opp2']])
+slics_samples['nn_4'] = np.hstack([slics_samples['nn_pos_same4'], slics_samples['nn_neg_same4'], 
+                                   slics_samples['nn_pos_opp4'], slics_samples['nn_neg_opp4']])
+slics_samples['nn_8'] = np.hstack([slics_samples['nn_pos_same8'], slics_samples['nn_neg_same8'], 
+                                   slics_samples['nn_pos_opp8'], slics_samples['nn_neg_opp8']])
+slics_samples['nn_all'] = np.hstack([slics_samples['nn_1'], slics_samples['nn_2'], 
+                                     slics_samples['nn_4'], slics_samples['nn_8']])
+slics_samples['all'] = np.hstack([slics_samples['kappa_all'], slics_samples['nn_all']])
+slics_samples['all_and_pdf'] = np.hstack([slics_samples['all'], slics_samples['kappa']])
+slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kappa'], slics_samples['kk']])
+slics_samples['all_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kk']])
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -50,6 +404,7 @@ all_deriv = []
 kk_deriv = []
 all_and_pdf_deriv = []
 all_howls_and_kk_deriv = []
+all_and_kk_deriv = []
 for i in range(2):
     if i == 0:
         delta_p = params[1,0] - params[0,0]
@@ -89,6 +444,7 @@ for i in range(2):
     kk_deriv.append((data_plus['kk_mean'] - data_minus['kk_mean']) / delta_p)
     all_and_pdf_deriv.append((data_plus['all_and_pdf_mean'] - data_minus['all_and_pdf_mean']) / delta_p)
     all_howls_and_kk_deriv.append((data_plus['all_howls_and_kk_mean'] - data_minus['all_howls_and_kk_mean']) / delta_p)
+    all_and_kk_deriv.append((data_plus['all_and_kk_mean'] - data_minus['all_and_kk_mean']) / delta_p)
 
 kappa_deriv = np.array(kappa_deriv)
 kappa_pos_deriv = np.array(kappa_pos_deriv)
@@ -117,6 +473,9 @@ nn_8_deriv = np.array(nn_8_deriv)
 nn_all_deriv = np.array(nn_all_deriv)
 all_deriv = np.array(all_deriv) 
 kk_deriv = np.array(kk_deriv)
+all_and_pdf_deriv = np.array(all_and_pdf_deriv)
+all_howls_and_kk_deriv = np.array(all_howls_and_kk_deriv)
+all_and_kk_deriv = np.array(all_and_kk_deriv)
 
 area_scaling = 100 / 15000 / 4  # euclid
 kappa_cov = data_slics['kappa_cov'] * area_scaling
@@ -148,152 +507,156 @@ all_cov = data_slics['all_cov'] * area_scaling
 kk_cov = data_slics['kk_cov'] * area_scaling
 all_and_pdf_cov = data_slics['all_and_pdf_cov'] * area_scaling  
 all_howls_and_kk_cov = data_slics['all_howls_and_kk_cov'] * area_scaling
+all_and_kk_cov = data_slics['all_and_kk_cov'] * area_scaling
+n = n_realizations
 
-n=924 * 4
-kappa_inv_cov = np.linalg.inv(kappa_cov) * (n-28-2) / (n-1)
-kappa_pos_inv_cov = np.linalg.inv(kappa_pos_cov) * (n-30-2) / (n-1)
-kappa_neg_inv_cov = np.linalg.inv(kappa_neg_cov) * (n-30-2) / (n-1)
-nn_pos_same1_inv_cov = np.linalg.inv(nn_pos_same1_cov) * (n-30-2) / (n-1)
-nn_neg_same1_inv_cov = np.linalg.inv(nn_neg_same1_cov) * (n-30-2) / (n-1)
-nn_pos_opp1_inv_cov = np.linalg.inv(nn_pos_opp1_cov) * (n-30-2) / (n-1)
-nn_neg_opp1_inv_cov = np.linalg.inv(nn_neg_opp1_cov) * (n-30-2) / (n-1)
-nn_pos_same2_inv_cov = np.linalg.inv(nn_pos_same2_cov) * (n-30-2) / (n-1)
-nn_neg_same2_inv_cov = np.linalg.inv(nn_neg_same2_cov) * (n-30-2) / (n-1)  
-nn_pos_opp2_inv_cov = np.linalg.inv(nn_pos_opp2_cov) * (n-30-2) / (n-1)
-nn_neg_opp2_inv_cov = np.linalg.inv(nn_neg_opp2_cov) * (n-30-2) / (n-1)
-nn_pos_same4_inv_cov = np.linalg.inv(nn_pos_same4_cov) * (n-30-2) / (n-1)
-nn_neg_same4_inv_cov = np.linalg.inv(nn_neg_same4_cov) * (n-30-2) / (n-1)
-nn_pos_opp4_inv_cov = np.linalg.inv(nn_pos_opp4_cov) * (n-30-2) / (n-1)
-nn_neg_opp4_inv_cov = np.linalg.inv(nn_neg_opp4_cov) * (n-30-2) / (n-1) 
-nn_pos_same8_inv_cov = np.linalg.inv(nn_pos_same8_cov)  * (n-30-2) / (n-1)
-nn_neg_same8_inv_cov = np.linalg.inv(nn_neg_same8_cov) * (n-30-2) / (n-1)
-nn_pos_opp8_inv_cov = np.linalg.inv(nn_pos_opp8_cov) * (n-30-2) / (n-1)
-nn_neg_opp8_inv_cov = np.linalg.inv(nn_neg_opp8_cov)  * (n-30-2) / (n-1)
-kappa_all_inv_cov = np.linalg.inv(kappa_all_cov) * (n-30*2-2) / (n-1)
-nn_1_inv_cov = np.linalg.inv(nn_1_cov) * (n-30*4-2) / (n-1)
-nn_2_inv_cov = np.linalg.inv(nn_2_cov) * (n-30*4-2) / (n-1)
-nn_4_inv_cov = np.linalg.inv(nn_4_cov) * (n-30*4-2) / (n-1)
-nn_8_inv_cov = np.linalg.inv(nn_8_cov) * (n-30*4-2) / (n-1)
-nn_all_inv_cov = np.linalg.inv(nn_all_cov) * (n-30*16-2) / (n-1)
-all_inv_cov = np.linalg.inv(all_cov) * (n-30*16-30*2-2) / (n-1)  
-kk_inv_cov = np.linalg.inv(kk_cov) * (n-10-2) / (n-1)
-all_and_pdf_inv_cov = np.linalg.inv(all_and_pdf_cov) * (n-30*16-30*2-28-2) / (n-1)
-all_howls_and_kk_inv_cov = np.linalg.inv(all_howls_and_kk_cov) * (n-30*16-30*2-28-10-2) / (n-1)
+# 1. Initialize Individual Blocks
+kappa_block = create_block("kappa", data_slics["kappa_mean"], kappa_deriv, kappa_cov, slics_samples.get("kappa")).filter()
+kappa_pos_block = create_block("kappa_pos", data_slics["kappa_pos_mean"], kappa_pos_deriv, kappa_pos_cov, slics_samples.get("kappa_pos")).filter()
+kappa_neg_block = create_block("kappa_neg", data_slics["kappa_neg_mean"], kappa_neg_deriv, kappa_neg_cov, slics_samples.get("kappa_neg")).filter()
 
-fisher_kappa = np.zeros((2,2))
-fisher_kappa_pos = np.zeros((2,2))
-fisher_kappa_neg = np.zeros((2,2))
-fisher_nn_pos_same1 = np.zeros((2,2))
-fisher_nn_neg_same1 = np.zeros((2,2))
-fisher_nn_pos_opp1 = np.zeros((2,2))
-fisher_nn_neg_opp1 = np.zeros((2,2))
-fisher_nn_pos_same2 = np.zeros((2,2))   
-fisher_nn_neg_same2 = np.zeros((2,2))
-fisher_nn_pos_opp2 = np.zeros((2,2))
-fisher_nn_neg_opp2 = np.zeros((2,2))
-fisher_nn_pos_same4 = np.zeros((2,2))
-fisher_nn_neg_same4 = np.zeros((2,2))
-fisher_nn_pos_opp4 = np.zeros((2,2))
-fisher_nn_neg_opp4 = np.zeros((2,2)) 
-fisher_nn_pos_same8 = np.zeros((2,2))
-fisher_nn_neg_same8 = np.zeros((2,2))
-fisher_nn_pos_opp8 = np.zeros((2,2))
-fisher_nn_neg_opp8 = np.zeros((2,2)) 
-fisher_kappa_all = np.zeros((2,2))
-fisher_nn_1 = np.zeros((2,2))
-fisher_nn_2 = np.zeros((2,2))
-fisher_nn_4 = np.zeros((2,2))
-fisher_nn_8 = np.zeros((2,2))
-fisher_nn_all = np.zeros((2,2))
-fisher_all = np.zeros((2,2))
-fisher_kk = np.zeros((2,2))
-fisher_all_and_pdf = np.zeros((2,2))    
-fisher_all_howls_and_kk = np.zeros((2,2))
-for i in range(2):
-    for j in range(2):
-        fisher_kappa[i,j] = kappa_deriv[i] @ kappa_inv_cov @ kappa_deriv[j]
-        fisher_kappa_pos[i,j] = kappa_pos_deriv[i] @ kappa_pos_inv_cov @ kappa_pos_deriv[j]
-        fisher_kappa_neg[i,j] = kappa_neg_deriv[i] @ kappa_neg_inv_cov @ kappa_neg_deriv[j]
-        fisher_nn_pos_same1[i,j] = nn_pos_same1_deriv[i] @ nn_pos_same1_inv_cov @ nn_pos_same1_deriv[j]
-        fisher_nn_neg_same1[i,j] = nn_neg_same1_deriv[i] @ nn_neg_same1_inv_cov @ nn_neg_same1_deriv[j]
-        fisher_nn_pos_opp1[i,j] = nn_pos_opp1_deriv[i] @ nn_pos_opp1_inv_cov @ nn_pos_opp1_deriv[j]
-        fisher_nn_neg_opp1[i,j] = nn_neg_opp1_deriv[i] @ nn_neg_opp1_inv_cov @ nn_neg_opp1_deriv[j]
-        fisher_nn_pos_same2[i,j] = nn_pos_same2_deriv[i] @ nn_pos_same2_inv_cov @ nn_pos_same2_deriv[j]
-        fisher_nn_neg_same2[i,j] = nn_neg_same2_deriv[i] @ nn_neg_same2_inv_cov @ nn_neg_same2_deriv[j]
-        fisher_nn_pos_opp2[i,j] = nn_pos_opp2_deriv[i] @ nn_pos_opp2_inv_cov @ nn_pos_opp2_deriv[j]
-        fisher_nn_neg_opp2[i,j] = nn_neg_opp2_deriv[i] @ nn_neg_opp2_inv_cov @ nn_neg_opp2_deriv[j]
-        fisher_nn_pos_same4[i,j] = nn_pos_same4_deriv[i] @ nn_pos_same4_inv_cov @ nn_pos_same4_deriv[j]
-        fisher_nn_neg_same4[i,j] = nn_neg_same4_deriv[i] @ nn_neg_same4_inv_cov @ nn_neg_same4_deriv[j]
-        fisher_nn_pos_opp4[i,j] = nn_pos_opp4_deriv[i] @ nn_pos_opp4_inv_cov @ nn_pos_opp4_deriv[j]
-        fisher_nn_neg_opp4[i,j] = nn_neg_opp4_deriv[i] @ nn_neg_opp4_inv_cov @ nn_neg_opp4_deriv[j] 
-        fisher_nn_pos_same8[i,j] = nn_pos_same8_deriv[i] @ nn_pos_same8_inv_cov @ nn_pos_same8_deriv[j]
-        fisher_nn_neg_same8[i,j] = nn_neg_same8_deriv[i] @ nn_neg_same8_inv_cov @ nn_neg_same8_deriv[j]
-        fisher_nn_pos_opp8[i,j] = nn_pos_opp8_deriv[i] @ nn_pos_opp8_inv_cov @ nn_pos_opp8_deriv[j]
-        fisher_nn_neg_opp8[i,j] = nn_neg_opp8_deriv[i] @ nn_neg_opp8_inv_cov @ nn_neg_opp8_deriv[j] 
-        fisher_kappa_all[i,j] = kappa_all_deriv[i] @ kappa_all_inv_cov @ kappa_all_deriv[j]
-        fisher_nn_1[i,j] = nn_1_deriv[i] @ nn_1_inv_cov @ nn_1_deriv[j]
-        fisher_nn_2[i,j] = nn_2_deriv[i] @ nn_2_inv_cov @ nn_2_deriv[j]
-        fisher_nn_4[i,j] = nn_4_deriv[i] @ nn_4_inv_cov @ nn_4_deriv[j]
-        fisher_nn_8[i,j] = nn_8_deriv[i] @ nn_8_inv_cov @ nn_8_deriv[j]
-        fisher_nn_all[i,j] = nn_all_deriv[i] @ nn_all_inv_cov @ nn_all_deriv[j]
-        fisher_all[i,j] = all_deriv[i] @ all_inv_cov @ all_deriv[j]
-        fisher_kk[i,j] = kk_deriv[i] @ kk_inv_cov @ kk_deriv[j]
-        fisher_all_and_pdf[i,j] = all_and_pdf_deriv[i] @ all_and_pdf_inv_cov @ all_and_pdf_deriv[j]
-        fisher_all_howls_and_kk[i,j] = all_howls_and_kk_deriv[i] @ all_howls_and_kk_inv_cov @ all_howls_and_kk_deriv[j]
+nn_blocks = {}
+for scale in [1, 2, 4, 8]:
+    for t in ['pos_same', 'neg_same', 'pos_opp', 'neg_opp']:
+        key = f"nn_{t}{scale}"
+        # We need to access the variables like nn_pos_same1_deriv etc.
+        # Since they are local variables, we assume they are available.
+        # Using locals() or globals()? In a script, globals() works.
+        d_val = globals()[f"{key}_deriv"]
+        c_val = globals()[f"{key}_cov"]
+        m_val = data_slics[f"{key}_mean"]
+        s_val = slics_samples.get(key)
+        
+        block = create_block(key, m_val, d_val, c_val, s_val).filter()
+        nn_blocks[key] = block
 
-n = 924
-cov_kappa = np.linalg.inv(fisher_kappa) 
-print(fisher_kappa, cov_kappa)
-cov_kappa_pos = np.linalg.inv(fisher_kappa_pos) 
-print(cov_kappa_pos)
-cov_kappa_neg = np.linalg.inv(fisher_kappa_neg)
-print(np.linalg.det(cov_kappa_neg))
-cov_nn_pos_same1 = np.linalg.inv(fisher_nn_pos_same1) 
-cov_nn_neg_same1 = np.linalg.inv(fisher_nn_neg_same1) 
-cov_nn_pos_opp1 = np.linalg.inv(fisher_nn_pos_opp1) 
-cov_nn_neg_opp1 = np.linalg.inv(fisher_nn_neg_opp1) 
-cov_nn_pos_same2 = np.linalg.inv(fisher_nn_pos_same2) 
-cov_nn_neg_same2 = np.linalg.inv(fisher_nn_neg_same2) 
-cov_nn_pos_opp2 = np.linalg.inv(fisher_nn_pos_opp2) 
-cov_nn_neg_opp2 = np.linalg.inv(fisher_nn_neg_opp2) 
-cov_nn_pos_same4 = np.linalg.inv(fisher_nn_pos_same4) 
-cov_nn_neg_same4 = np.linalg.inv(fisher_nn_neg_same4) 
-cov_nn_pos_opp4 = np.linalg.inv(fisher_nn_pos_opp4) 
-cov_nn_neg_opp4 = np.linalg.inv(fisher_nn_neg_opp4) 
-cov_nn_pos_same8 = np.linalg.inv(fisher_nn_pos_same8) 
-cov_nn_neg_same8 = np.linalg.inv(fisher_nn_neg_same8) 
-cov_nn_pos_opp8 = np.linalg.inv(fisher_nn_pos_opp8) 
-cov_nn_neg_opp8 = np.linalg.inv(fisher_nn_neg_opp8) 
-cov_kappa_all = np.linalg.inv(fisher_kappa_all) 
-print(np.linalg.det(cov_kappa_all))
-cov_nn_1 = np.linalg.inv(fisher_nn_1) 
-cov_nn_2 = np.linalg.inv(fisher_nn_2) 
-cov_nn_4 = np.linalg.inv(fisher_nn_4) 
-cov_nn_8 = np.linalg.inv(fisher_nn_8) 
-cov_nn_all = np.linalg.inv(fisher_nn_all) 
-cov_all = np.linalg.inv(fisher_all) 
-cov_kk = np.linalg.inv(fisher_kk)
-print(np.linalg.det(cov_kk))
-cov_all_and_pdf = np.linalg.inv(fisher_all_and_pdf)
-cov_all_howls_and_kk = np.linalg.inv(fisher_all_howls_and_kk)
+kk_block = create_block("kk", data_slics["kk_mean"], kk_deriv, kk_cov, slics_samples.get("kk")).filter()
+
+# Assign back to variables for compatibility if needed (optional, but good for safety)
+kappa_deriv, kappa_cov, kappa_inv_cov, kappa_mask = kappa_block.final_deriv, kappa_block.final_cov, kappa_block.inv_cov, kappa_block.mask
+kappa_pos_deriv, kappa_pos_cov, kappa_pos_inv_cov, kappa_pos_mask = kappa_pos_block.final_deriv, kappa_pos_block.final_cov, kappa_pos_block.inv_cov, kappa_pos_block.mask
+kappa_neg_deriv, kappa_neg_cov, kappa_neg_inv_cov, kappa_neg_mask = kappa_neg_block.final_deriv, kappa_neg_block.final_cov, kappa_neg_block.inv_cov, kappa_neg_block.mask
+kk_deriv, kk_cov, kk_inv_cov, kk_mask = kk_block.final_deriv, kk_block.final_cov, kk_block.inv_cov, kk_block.mask
+
+# Also update nn variables
+for key, block in nn_blocks.items():
+    globals()[f"{key}_deriv"] = block.final_deriv
+    globals()[f"{key}_cov"] = block.final_cov
+    globals()[f"{key}_inv_cov"] = block.inv_cov
+    globals()[f"{key}_mask"] = block.mask
+
+# ... repeat for others if downstream code uses them ...
+
+# 2. Combine Blocks
+# Kappa All: [pos, neg]
+kappa_all_block = FisherDataBlock.combine("kappa_all", [kappa_pos_block, kappa_neg_block], 
+                                          kappa_all_deriv, kappa_all_cov, n, slics_samples.get("kappa_all"))
+kappa_all_inv_cov = kappa_all_block.inv_cov
+kappa_all_deriv = kappa_all_block.final_deriv # Update global variable
+
+# NN Scales (nn_1, nn_2, etc.): [pos_same, neg_same, pos_opp, neg_opp]
+nn_scale_blocks = {}
+for scale in [1, 2, 4, 8]:
+    # comps = [nn_blocks[f"nn_pos_same{scale}"], nn_blocks[f"nn_neg_same{scale}"],
+    #          nn_blocks[f"nn_pos_opp{scale}"], nn_blocks[f"nn_neg_opp{scale}"]]
+    
+    key = f"nn_{scale}"
+    d_val = globals()[f"{key}_deriv"]
+    c_val = globals()[f"{key}_cov"]
+    m_val = data_slics[f"{key}_mean"]
+    s_val = slics_samples.get(key)
+    
+    # Re-filter explicitly for combined NN blocks
+    b = create_block(key, m_val, d_val, c_val, s_val).filter()
+    nn_scale_blocks[scale] = b
+    # Assign to global var expected later?
+    globals()[f"{key}_inv_cov"] = b.inv_cov
+    globals()[f"{key}_deriv"] = b.final_deriv
+
+# NN All: [nn_1, nn_2, nn_4, nn_8]
+# nn_all_comps = [nn_scale_blocks[1], nn_scale_blocks[2], nn_scale_blocks[4], nn_scale_blocks[8]]
+# Re-filter explicitly for NN All
+nn_all_block = create_block("nn_all", data_slics["nn_all_mean"], nn_all_deriv, nn_all_cov, slics_samples.get("nn_all")).filter()
+nn_all_inv_cov = nn_all_block.inv_cov
+nn_all_deriv = nn_all_block.final_deriv
+
+# All: [kappa_all, nn_all]
+# Re-filter explicitly for All
+all_block = create_block("all", data_slics["all_mean"], all_deriv, all_cov, slics_samples.get("all")).filter()
+all_inv_cov = all_block.inv_cov
+all_deriv = all_block.final_deriv
+
+# All and KK: [all, kk]
+all_and_kk_block = FisherDataBlock.combine("all_and_kk", [all_block, kk_block], all_and_kk_deriv, all_and_kk_cov, n, slics_samples.get("all_and_kk"))
+all_and_kk_inv_cov = all_and_kk_block.inv_cov
+all_and_kk_deriv = all_and_kk_block.final_deriv
+
+# All and PDF: [all, kappa] (Wait, check construction: slices_samples['all_and_pdf'] = [all, kappa])
+# kappa_block is the one for "kappa" (unsplit)
+all_and_pdf_block = FisherDataBlock.combine("all_and_pdf", [all_block, kappa_block], all_and_pdf_deriv, all_and_pdf_cov, n, slics_samples.get("all_and_pdf"))
+all_and_pdf_inv_cov = all_and_pdf_block.inv_cov
+all_and_pdf_deriv = all_and_pdf_block.final_deriv
+
+# All Howls and KK: [all, kappa, kk] -> [all_and_pdf, kk] ? 
+# Construction: slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kappa'], slics_samples['kk']])
+# Equivalent to [all_and_pdf_block, kk_block]
+all_howls_and_kk_block = FisherDataBlock.combine("all_howls_and_kk", [all_and_pdf_block, kk_block], 
+                                                 all_howls_and_kk_deriv, all_howls_and_kk_cov, n, slics_samples.get("all_howls_and_kk"))
+all_howls_and_kk_inv_cov = all_howls_and_kk_block.inv_cov
+all_howls_and_kk_deriv = all_howls_and_kk_block.final_deriv
+
+
+
+def build_fisher(name, deriv, inv_cov):
+    fisher = deriv @ inv_cov @ deriv.T
+    cov = np.linalg.inv(fisher)
+    print(f"{name} Fisher:\n{fisher}")
+    print(f"{name} 1σ: {np.sqrt(np.diag(cov))}")
+    return fisher, cov
+
+blocks = {
+    "kappa": (kappa_deriv, kappa_inv_cov),
+    "kappa_pos": (kappa_pos_deriv, kappa_pos_inv_cov),
+    "kappa_neg": (kappa_neg_deriv, kappa_neg_inv_cov),
+    "kappa_all": (kappa_all_deriv, kappa_all_inv_cov),
+    "nn_all": (nn_all_deriv, nn_all_inv_cov),
+    "all": (all_deriv, all_inv_cov),
+    "kk": (kk_deriv, kk_inv_cov),
+    "all_and_pdf": (all_and_pdf_deriv, all_and_pdf_inv_cov),
+    "all_howls_and_kk": (all_howls_and_kk_deriv, all_howls_and_kk_inv_cov),
+    "all_and_kk": (all_and_kk_deriv, all_and_kk_inv_cov),
+}
+
+fisher_mats = {}
+cov_mats = {}
+for name, (deriv, inv_cov) in blocks.items():
+    fisher_mats[name], cov_mats[name] = build_fisher(name, deriv, inv_cov)
+
 
 from getdist.gaussian_mixtures import GaussianND
 names = ['Om', 'sigma8']
-labels = ['\\Omega_m', '\\sigma_8']
-
+labels = ['\\Omega_{\\rm m}', '\\sigma_{\\rm 8}']
+cov_kappa = cov_mats['kappa']
+cov_kappa_pos = cov_mats['kappa_pos']
+cov_kappa_neg = cov_mats['kappa_neg']
+cov_kappa_all = cov_mats['kappa_all']
+cov_nn_all = cov_mats['nn_all']
+cov_all = cov_mats['all']
+cov_kk = cov_mats['kk']
+cov_all_and_pdf = cov_mats['all_and_pdf']
+cov_all_howls_and_kk = cov_mats['all_howls_and_kk']
+cov_all_and_kk = cov_mats['all_and_kk']
 kappa_samples = GaussianND(mean=params_fid, cov=cov_kappa, names=names, labels=labels, label=r"PDF")
 kappa_pos_samples = GaussianND(mean=params_fid, cov=cov_kappa_pos, names=names, labels=labels, label=r"$C^{p}(\kappa)$")
 kappa_neg_samples = GaussianND(mean=params_fid, cov=cov_kappa_neg, names=names, labels=labels, label=r"$C^{n}(\kappa)$")
 kappa_all_samples = GaussianND(mean=params_fid, cov=cov_kappa_all, names=names, labels=labels, label=r"$C^{\mathrm{all}}(\kappa)$")
-nn_1_samples = GaussianND(mean=params_fid, cov=cov_nn_1, names=names, labels=labels, label=r"$C^{\mathrm{all}}_1(\theta)$")
-nn_2_samples = GaussianND(mean=params_fid, cov=cov_nn_2, names=names, labels=labels, label=r"$C^{\mathrm{all}}_2(\theta)$")
-nn_4_samples = GaussianND(mean=params_fid, cov=cov_nn_4, names=names, labels=labels, label=r"$C^{\mathrm{all}}_4(\theta)$")
-nn_8_samples = GaussianND(mean=params_fid, cov=cov_nn_8, names=names, labels=labels, label=r"$C^{\mathrm{all}}_8(\theta)$")
 nn_all_samples = GaussianND(mean=params_fid, cov=cov_nn_all, names=names, labels=labels, label=r"$C^{\mathrm{all}}_{1, 2, 4, 8}(\theta)$")
 all_samples = GaussianND(mean=params_fid, cov=cov_all, names=names, labels=labels, label=r"$DCDP + kNN$")
 kk_samples = GaussianND(mean=params_fid, cov=cov_kk, names=names, labels=labels, label=r"$\xi^{\kappa\kappa}(\theta)$")
 all_and_pdf_samples = GaussianND(mean=params_fid, cov=cov_all_and_pdf, names=names, labels=labels, label=r"$All HOWLS$")
 all_howls_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_howls_and_kk, names=names, labels=labels, label=r"$ALL HOWLS + \xi^{\kappa\kappa}(\theta)$")
+all_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_and_kk, names=names, labels=labels, label=r"$All HOWLS + \xi^{\kappa\kappa}(\theta)$")
+
 import matplotlib.pyplot as plt
 from getdist import plots
 import matplotlib as mpl
@@ -329,14 +692,14 @@ g.export("outfiles/nns.png", dpi=300)
 # kappa_all nn_all all
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
 g.settings.num_plot_contours = 1
-g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_pdf_samples, all_howls_and_kk_samples],
+g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_pdf_samples, all_howls_and_kk_samples],
           param1="Om", param2="sigma8",
             filled=False,
             lims = [0.295, 0.33, 0.82, 0.865],
-            colors = [color_map(i) for i in range(3)] + ['red', 'black'],
-            ls = ['solid', 'solid', 'solid', 'solid', 'dashed'],
+            colors = [color_map(i) for i in range(4)] + ['red', 'black'],
+            ls = ['solid', 'solid', 'solid', 'solid', 'solid', 'dashed'],
             lws=2)
-g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defects", r"All HOWLS", r"$\text{All HOWLS} + \xi^{\kappa\kappa}(\theta)$"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defects", r"$\text{Defects} + \xi^{\kappa\kappa}(\theta)$", r"All HOWLS", r"$\text{All HOWLS} + \xi^{\kappa\kappa}(\theta)$"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/combined.png", dpi=300)
           
 
@@ -347,26 +710,23 @@ print(f"PDF kappa: {np.sqrt(np.diag(cov_kappa))}")
 print(f"Defect kappa pos: {np.sqrt(np.diag(cov_kappa_pos))}")
 print(f"Defect kappa neg: {np.sqrt(np.diag(cov_kappa_neg))}")
 print(f"Defect kappa all: {np.sqrt(np.diag(cov_kappa_all))}")
-print(f"Defect nn 1: {np.sqrt(np.diag(cov_nn_1))}")
-print(f"Defect nn 2: {np.sqrt(np.diag(cov_nn_2))}")
-print(f"Defect nn 4: {np.sqrt(np.diag(cov_nn_4))}")
-print(f"Defect nn 8: {np.sqrt(np.diag(cov_nn_8))}")
 print(f"Defect nn all: {np.sqrt(np.diag(cov_nn_all))}")
 print(f"Defect all: {np.sqrt(np.diag(cov_all))}")
 print(f"kk: {np.sqrt(np.diag(cov_kk))}")
 print(f"All and PDF: {np.sqrt(np.diag(cov_all_and_pdf))}")
 print(f"All HOWLS and kk: {np.sqrt(np.diag(cov_all_howls_and_kk))}")
+print(f"All and kk: {np.sqrt(np.diag(cov_all_and_kk))}")
 
 # plot errors with horizontal errorbar-like plot
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-labels = [r"$\xi^{\kappa\kappa}(\theta)$", "PDF", "Defects", "All HOWLS", r"All HOWLS + $\xi^{\kappa\kappa}(\theta)$"]
-sigma_om = np.array([np.sqrt(cov_kk[0,0]), np.sqrt(cov_kappa[0,0]), np.sqrt(cov_all[0,0]), np.sqrt(cov_all_and_pdf[0,0]), np.sqrt(cov_all_howls_and_kk[0,0])])
-sigma_sigma8 = np.array([np.sqrt(cov_kk[1,1]), np.sqrt(cov_kappa[1,1]), np.sqrt(cov_all[1,1]), np.sqrt(cov_all_and_pdf[1,1]), np.sqrt(cov_all_howls_and_kk[1,1])])
+labels = [r"$\xi^{\kappa\kappa}(\theta)$", "PDF", "Defects", r"$\text{Defects} + \xi^{\kappa\kappa}(\theta)$", "All HOWLS", r"All HOWLS + $\xi^{\kappa\kappa}(\theta)$"]
+sigma_om = np.array([np.sqrt(cov_kk[0,0]), np.sqrt(cov_kappa[0,0]), np.sqrt(cov_all[0,0]), np.sqrt(cov_all_and_kk[0,0]), np.sqrt(cov_all_and_pdf[0,0]), np.sqrt(cov_all_howls_and_kk[0,0])])
+sigma_sigma8 = np.array([np.sqrt(cov_kk[1,1]), np.sqrt(cov_kappa[1,1]), np.sqrt(cov_all[1,1]), np.sqrt(cov_all_and_kk[1,1]), np.sqrt(cov_all_and_pdf[1,1]), np.sqrt(cov_all_howls_and_kk[1,1])])
 
 # Normalize for color intensity (smaller error = darker color, stronger constraint)
-norm_om = 0.9 - (sigma_om - sigma_om.min()) / (sigma_om.max() - sigma_om.min())
-norm_sigma8 = 0.9 - (sigma_sigma8 - sigma_sigma8.min()) / (sigma_sigma8.max() - sigma_sigma8.min())
+norm_om = 0.8 - (sigma_om - sigma_om.min()) / (sigma_om.max() - sigma_om.min())
+norm_sigma8 = 0.8 - (sigma_sigma8 - sigma_sigma8.min()) / (sigma_sigma8.max() - sigma_sigma8.min())
 max_err = max(sigma_om.max(), sigma_sigma8.max())
 
 x = np.arange(len(labels))
@@ -395,9 +755,9 @@ for i, (y_pos, err, intensity) in enumerate(zip(x + width/2, sigma_sigma8, norm_
         ax.text(err + 0.02 * max_err, y_pos, f"{reduction:.0f}%", va='center', ha='left', color=color, fontsize=7)
 
 # Add dummy plots for legend
-ax.plot([], [], color=cm.Blues(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\Omega_m}$')
-ax.plot([], [], color=cm.Oranges(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\sigma_8}$')
-ax.set_xlabel(r'1 $\sigma$ Range')
+ax.plot([], [], color=cm.Blues(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\Omega_{\rm m}}$')
+ax.plot([], [], color=cm.Oranges(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\sigma_{\rm 8}}$')
+ax.set_xlabel(r'1$\sigma$ Range')
 ax.set_yticks(x)
 ax.set_yticklabels(labels)
 ax.tick_params(axis='y', which='both', length=0)  # Remove all y-axis tick marks
@@ -407,3 +767,4 @@ ax.legend()
 plt.tight_layout()
 plt.savefig("outfiles/1sigma_bars.png", dpi=300)
 plt.close()
+
