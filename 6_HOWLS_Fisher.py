@@ -33,7 +33,7 @@ def get_bin_coords(name):
     
     if name == "kappa":
         centers = (bin_edges_kappa[:-1] + bin_edges_kappa[1:]) / 2
-        return centers[:-2] # Adjust for slice
+        return centers# Adjust for slice
     
     # Cumulative stats use bin edges
     if name in ["kappa_pos", "kappa_neg"]:
@@ -137,7 +137,7 @@ S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
 S809_DIR = f"{DATA_DIR}/LCDM_s80976624_ks_nomask_shear_new"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
-def load_slics_samples(slics_dir, n_files=1000):
+def load_slics_samples(slics_dir, n_files=1101):
     print("Loading SLICS samples for KL calculation...")
     
     # Initialize lists
@@ -146,7 +146,7 @@ def load_slics_samples(slics_dir, n_files=1000):
             'nn_pos_same2_cum', 'nn_neg_same2_cum', 'nn_pos_opp2_cum', 'nn_neg_opp2_cum',
             'nn_pos_same4_cum', 'nn_neg_same4_cum', 'nn_pos_opp4_cum', 'nn_neg_opp4_cum',
             'nn_pos_same8_cum', 'nn_neg_same8_cum', 'nn_pos_opp8_cum', 'nn_neg_opp8_cum',
-            'kk']
+            'kk', 'pp', 'nn', 'pn']
             
     samples = {k: [] for k in keys}
     
@@ -162,7 +162,7 @@ def load_slics_samples(slics_dir, n_files=1000):
                 with np.load(filepath) as data:
                     # Special handling for kappa truncation
                     if 'kappa' in data:
-                        samples['kappa'].append(data['kappa'][:-2])
+                        samples['kappa'].append(data['kappa'])
                     
                     # Direct mapping for others
                     for k in keys:
@@ -171,6 +171,7 @@ def load_slics_samples(slics_dir, n_files=1000):
                             samples[k].append(data[k])
                 count += 1
             except Exception as e:
+                print(f"Error loading file {filepath}: {e}")
                 pass
     
     print(f"Loaded {count} samples.")
@@ -178,7 +179,7 @@ def load_slics_samples(slics_dir, n_files=1000):
     final_samples = {}
     # Name mapping to match code variables
     name_map = {
-        'kappa': 'kappa', 'kk': 'kk',
+        'kappa': 'kappa', 'kk': 'kk', 'pp': 'pp', 'nn': 'nn', 'pn': 'pn',
         'kappa_pos_cum': 'kappa_pos', 'kappa_neg_cum': 'kappa_neg',
         'nn_pos_same1_cum': 'nn_pos_same1', 'nn_neg_same1_cum': 'nn_neg_same1',
         'nn_pos_opp1_cum': 'nn_pos_opp1', 'nn_neg_opp1_cum': 'nn_neg_opp1',
@@ -368,6 +369,7 @@ slics_samples['all'] = np.hstack([slics_samples['kappa_all'], slics_samples['nn_
 slics_samples['all_and_pdf'] = np.hstack([slics_samples['all'], slics_samples['kappa']])
 slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kappa'], slics_samples['kk']])
 slics_samples['all_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kk']])
+slics_samples['dcorr'] = np.hstack([slics_samples['pp'], slics_samples['nn'], slics_samples['pn']])
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -402,6 +404,10 @@ nn_8_deriv = []
 nn_all_deriv = []
 all_deriv = []
 kk_deriv = []
+pp_deriv = []
+nn_deriv = []
+pn_deriv = []
+dcorr_deriv = []
 all_and_pdf_deriv = []
 all_howls_and_kk_deriv = []
 all_and_kk_deriv = []
@@ -445,6 +451,10 @@ for i in range(2):
     all_and_pdf_deriv.append((data_plus['all_and_pdf_mean'] - data_minus['all_and_pdf_mean']) / delta_p)
     all_howls_and_kk_deriv.append((data_plus['all_howls_and_kk_mean'] - data_minus['all_howls_and_kk_mean']) / delta_p)
     all_and_kk_deriv.append((data_plus['all_and_kk_mean'] - data_minus['all_and_kk_mean']) / delta_p)
+    pp_deriv.append((data_plus['pp_mean'] - data_minus['pp_mean']) / delta_p)
+    nn_deriv.append((data_plus['nn_mean'] - data_minus['nn_mean']) / delta_p)
+    pn_deriv.append((data_plus['pn_mean'] - data_minus['pn_mean']) / delta_p)
+    dcorr_deriv.append((data_plus['dcorr_mean'] - data_minus['dcorr_mean']) / delta_p)
 
 kappa_deriv = np.array(kappa_deriv)
 kappa_pos_deriv = np.array(kappa_pos_deriv)
@@ -476,8 +486,12 @@ kk_deriv = np.array(kk_deriv)
 all_and_pdf_deriv = np.array(all_and_pdf_deriv)
 all_howls_and_kk_deriv = np.array(all_howls_and_kk_deriv)
 all_and_kk_deriv = np.array(all_and_kk_deriv)
+pp_deriv = np.array(pp_deriv)
+nn_deriv = np.array(nn_deriv)
+pn_deriv = np.array(pn_deriv)
+dcorr_deriv = np.array(dcorr_deriv)
 
-area_scaling = 100 / 15000 / 4  # euclid
+area_scaling = 25 / 15000   # euclid
 kappa_cov = data_slics['kappa_cov'] * area_scaling
 kappa_pos_cov = data_slics['kappa_pos_cov'] * area_scaling
 kappa_neg_cov = data_slics['kappa_neg_cov'] * area_scaling
@@ -508,6 +522,10 @@ kk_cov = data_slics['kk_cov'] * area_scaling
 all_and_pdf_cov = data_slics['all_and_pdf_cov'] * area_scaling  
 all_howls_and_kk_cov = data_slics['all_howls_and_kk_cov'] * area_scaling
 all_and_kk_cov = data_slics['all_and_kk_cov'] * area_scaling
+pp_cov = data_slics['pp_cov'] * area_scaling
+nn_cov = data_slics['nn_cov'] * area_scaling
+pn_cov = data_slics['pn_cov'] * area_scaling
+dcorr_cov = data_slics['dcorr_cov'] * area_scaling
 n = n_realizations
 
 # 1. Initialize Individual Blocks
@@ -531,12 +549,18 @@ for scale in [1, 2, 4, 8]:
         nn_blocks[key] = block
 
 kk_block = create_block("kk", data_slics["kk_mean"], kk_deriv, kk_cov, slics_samples.get("kk")).filter()
+pp_block = create_block("pp", data_slics["pp_mean"], pp_deriv, pp_cov, slics_samples.get("pp")).filter()
+nn_block = create_block("nn", data_slics["nn_mean"], nn_deriv, nn_cov, slics_samples.get("nn")).filter()
+pn_block = create_block("pn", data_slics["pn_mean"], pn_deriv, pn_cov, slics_samples.get("pn")).filter()
 
 # Assign back to variables for compatibility if needed (optional, but good for safety)
 kappa_deriv, kappa_cov, kappa_inv_cov, kappa_mask = kappa_block.final_deriv, kappa_block.final_cov, kappa_block.inv_cov, kappa_block.mask
 kappa_pos_deriv, kappa_pos_cov, kappa_pos_inv_cov, kappa_pos_mask = kappa_pos_block.final_deriv, kappa_pos_block.final_cov, kappa_pos_block.inv_cov, kappa_pos_block.mask
 kappa_neg_deriv, kappa_neg_cov, kappa_neg_inv_cov, kappa_neg_mask = kappa_neg_block.final_deriv, kappa_neg_block.final_cov, kappa_neg_block.inv_cov, kappa_neg_block.mask
 kk_deriv, kk_cov, kk_inv_cov, kk_mask = kk_block.final_deriv, kk_block.final_cov, kk_block.inv_cov, kk_block.mask
+pp_deriv, pp_cov, pp_inv_cov, pp_mask = pp_block.final_deriv, pp_block.final_cov, pp_block.inv_cov, pp_block.mask
+nn_deriv, nn_cov, nn_inv_cov, nn_mask = nn_block.final_deriv, nn_block.final_cov, nn_block.inv_cov, nn_block.mask
+pn_deriv, pn_cov, pn_inv_cov, pn_mask = pn_block.final_deriv, pn_block.final_cov, pn_block.inv_cov, pn_block.mask
 
 # Also update nn variables
 for key, block in nn_blocks.items():
@@ -605,6 +629,9 @@ all_howls_and_kk_block = FisherDataBlock.combine("all_howls_and_kk", [all_and_pd
 all_howls_and_kk_inv_cov = all_howls_and_kk_block.inv_cov
 all_howls_and_kk_deriv = all_howls_and_kk_block.final_deriv
 
+dcorr_block = FisherDataBlock.combine("dcorr", [pp_block, nn_block, pn_block], dcorr_deriv, dcorr_cov, n, slics_samples.get("dcorr"))
+dcorr_inv_cov = dcorr_block.inv_cov
+dcorr_deriv = dcorr_block.final_deriv
 
 
 def build_fisher(name, deriv, inv_cov):
@@ -625,6 +652,7 @@ blocks = {
     "all_and_pdf": (all_and_pdf_deriv, all_and_pdf_inv_cov),
     "all_howls_and_kk": (all_howls_and_kk_deriv, all_howls_and_kk_inv_cov),
     "all_and_kk": (all_and_kk_deriv, all_and_kk_inv_cov),
+    "dcorr": (dcorr_deriv, dcorr_inv_cov),
 }
 
 fisher_mats = {}
@@ -646,6 +674,7 @@ cov_kk = cov_mats['kk']
 cov_all_and_pdf = cov_mats['all_and_pdf']
 cov_all_howls_and_kk = cov_mats['all_howls_and_kk']
 cov_all_and_kk = cov_mats['all_and_kk']
+cov_dcorr = cov_mats['dcorr']
 kappa_samples = GaussianND(mean=params_fid, cov=cov_kappa, names=names, labels=labels, label=r"PDF")
 kappa_pos_samples = GaussianND(mean=params_fid, cov=cov_kappa_pos, names=names, labels=labels, label=r"$C^{p}(\kappa)$")
 kappa_neg_samples = GaussianND(mean=params_fid, cov=cov_kappa_neg, names=names, labels=labels, label=r"$C^{n}(\kappa)$")
@@ -656,6 +685,7 @@ kk_samples = GaussianND(mean=params_fid, cov=cov_kk, names=names, labels=labels,
 all_and_pdf_samples = GaussianND(mean=params_fid, cov=cov_all_and_pdf, names=names, labels=labels, label=r"$All HOWLS$")
 all_howls_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_howls_and_kk, names=names, labels=labels, label=r"$ALL HOWLS + \xi^{\kappa\kappa}(\theta)$")
 all_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_and_kk, names=names, labels=labels, label=r"$All HOWLS + \xi^{\kappa\kappa}(\theta)$")
+dcorr_samples = GaussianND(mean=params_fid, cov=cov_dcorr, names=names, labels=labels, label=r"$Defect 2PCFs$")
 
 import matplotlib.pyplot as plt
 from getdist import plots
@@ -702,7 +732,16 @@ g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_p
 g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defects", r"$\text{Defects} + \xi^{\kappa\kappa}(\theta)$", r"All HOWLS", r"$\text{All HOWLS} + \xi^{\kappa\kappa}(\theta)$"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/combined.png", dpi=300)
           
-
+g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
+g.settings.num_plot_contours = 1
+g.plot_2d([kk_samples, kappa_samples, dcorr_samples, nn_all_samples],
+          param1="Om", param2="sigma8",
+            filled=False,
+            lims = [0.295, 0.33, 0.82, 0.865],
+            colors = [color_map(i) for i in range(3)] + ['red'],
+            lws=2)
+g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defect 2PCFs", r"kNNs"], legend_loc='upper right', fontsize=7)
+g.export("outfiles/dcorr.png", dpi=300)
 
 # print 1 sigma errors
 print("1 sigma errors:")
@@ -740,9 +779,9 @@ for i, (y_pos, err, intensity) in enumerate(zip(x - width/2, sigma_om, norm_om))
     ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
     if i == 0:  # label baseline xi row
         ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:  # annotate percent reduction vs xi
-        reduction = (sigma_om[0] - err) / sigma_om[0] * 100
-        ax.text(err + 0.02 * max_err, y_pos, f"{reduction:.0f}%", va='center', ha='left', color=color, fontsize=7)
+    if i > 0:  # annotate factor vs xi
+        factor = sigma_om[0] / err
+        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
 
 # Plot sigma_8 errors  
 for i, (y_pos, err, intensity) in enumerate(zip(x + width/2, sigma_sigma8, norm_sigma8)):
@@ -750,9 +789,9 @@ for i, (y_pos, err, intensity) in enumerate(zip(x + width/2, sigma_sigma8, norm_
     ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
     if i == 0:  # label baseline xi row
         ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:  # annotate percent reduction vs xi
-        reduction = (sigma_sigma8[0] - err) / sigma_sigma8[0] * 100
-        ax.text(err + 0.02 * max_err, y_pos, f"{reduction:.0f}%", va='center', ha='left', color=color, fontsize=7)
+    if i > 0:  # annotate factor vs xi
+        factor = sigma_sigma8[0] / err
+        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
 
 # Add dummy plots for legend
 ax.plot([], [], color=cm.Blues(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\Omega_{\rm m}}$')

@@ -39,6 +39,7 @@ class DefectFinder:
         data = np.load(defect_datapath, allow_pickle=True)
         self.defects = data['defects'].item()
         #print(f"Loaded {len(self.defects)} defects from {defect_datapath}")
+        
 
     def delta_phi(self, phi1s, phi2s):
         """Compute the difference between two angles, handling periodicity."""
@@ -352,3 +353,74 @@ class DefectFinder:
         self.defect_count = total_defects  
         n = total_defects
         return n, n_pos, n_neg
+    
+    def save_defects(self, savepath):
+        """Save the defects dictionary to a fits file."""
+        # save different files for different charges, coord: RA, DEC
+        charges = set(self.defects.values())
+        for charge in charges:
+            ra_list = []
+            dec_list = []
+            for pix in self.defects.keys():
+                wnum = self.defects[pix]
+                if wnum == charge:
+                    if self.is_flat:
+                        ra, dec = self.get_coords(pix)
+                    else:
+                        ra = self.angle_deg[0, pix]
+                        dec = self.angle_deg[1, pix]
+                    ra_list.append(ra)
+                    dec_list.append(dec)
+            ra_array = np.array(ra_list)
+            dec_array = np.array(dec_list)
+            col1 = fits.Column(name='RA', array=ra_array, format='E')
+            col2 = fits.Column(name='DEC', array=dec_array, format='E')
+            cols = fits.ColDefs([col1, col2])
+            hdu = fits.BinTableHDU.from_columns(cols)
+            hdu.writeto(f"{savepath}_charge_{charge:+.1f}.fits", overwrite=True)
+
+    def correlation_function(self, charge1_path, charge2_path, min_sep=1., max_sep=100., n_bins=10):
+        """Compute the two-point correlation function of defects with given charges"""
+        cat1 = treecorr.Catalog(charge1_path,ra_col='RA',dec_col='DEC',ra_units='degrees',dec_units='degrees')
+        cat2 = treecorr.Catalog(charge2_path,ra_col='RA',dec_col='DEC',ra_units='degrees',dec_units='degrees')
+        if charge1_path == charge2_path:
+            # create random catalog, numbers should be 100x larger than data catalog
+            #print("Computing auto-correlation")
+            n_random = cat1.nobj * 100
+            ra_random = np.random.uniform(0, 360, n_random)
+            dec_random = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random)))  # uniform in sin(dec)
+            cat_rand = treecorr.Catalog(ra=ra_random, dec=dec_random, ra_units='degrees', dec_units='degrees')
+            dd = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            rr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            dr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            dd.process(cat1, cat1)
+            rr.process(cat_rand, cat_rand)
+            dr.process(cat1, cat_rand)
+            thetas = dd.meanr
+            xi, varxi = dd.calculateXi(rr=rr, dr=dr)
+            # covmat = dd.cov
+            return thetas, xi
+        
+        else:
+            # create random catalogs for both
+            #print("Computing cross-correlation")
+            n_random1 = cat1.nobj * 100
+            ra_random1 = np.random.uniform(0, 360, n_random1)
+            dec_random1 = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random1)))  # uniform in sin(dec)
+            cat_rand1 = treecorr.Catalog(ra=ra_random1, dec=dec_random1, ra_units='degrees', dec_units='degrees')
+            n_random2 = cat2.nobj * 100
+            ra_random2 = np.random.uniform(0, 360, n_random2)
+            dec_random2 = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random2)))  # uniform in sin(dec)
+            cat_rand2 = treecorr.Catalog(ra=ra_random2, dec=dec_random2, ra_units='degrees', dec_units='degrees')
+            dd = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            rr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            d1r2 = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            r1d2 = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            dd.process(cat1, cat2)
+            rr.process(cat_rand1, cat_rand2)
+            d1r2.process(cat1, cat_rand2)
+            r1d2.process(cat2, cat_rand1)
+            thetas = dd.meanr
+            xi, varxi = dd.calculateXi(rr=rr, dr=d1r2, rd=r1d2)
+            # covmat = dd.cov
+            return thetas, xi

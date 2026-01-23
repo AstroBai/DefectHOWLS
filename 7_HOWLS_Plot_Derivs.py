@@ -9,11 +9,11 @@ S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
 S809_DIR = f"{DATA_DIR}/LCDM_s80976624_ks_nomask_shear_new"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -25,6 +25,9 @@ kappa_pos_derivs = []
 kappa_neg_derivs = []
 nn_pos_same2_derivs = []
 nn_pos_opp2_derivs = []
+pp_derivs = []
+nn_derivs = []
+pn_derivs = []
 
 for seed in range(128):
     for i in range(2):
@@ -42,17 +45,27 @@ for seed in range(128):
         kappa_neg_deriv = (data_plus['kappa_neg_cum'] - data_minus['kappa_neg_cum']) / delta_p
         nn_pos_same2_deriv = (data_plus['nn_pos_same2_cum'] - data_minus['nn_pos_same2_cum']) / delta_p
         nn_pos_opp2_deriv = (data_plus['nn_pos_opp2_cum'] - data_minus['nn_pos_opp2_cum']) / delta_p
+        pp_deriv = (data_plus['pp'] - data_minus['pp']) / delta_p
+        nn_deriv = (data_plus['nn'] - data_minus['nn']) / delta_p
+        pn_deriv = (data_plus['pn'] - data_minus['pn']) / delta_p
+    
         kappa_derivs.append(kappa_deriv)
         kappa_pos_derivs.append(kappa_pos_deriv)
         kappa_neg_derivs.append(kappa_neg_deriv)
         nn_pos_same2_derivs.append(nn_pos_same2_deriv)
         nn_pos_opp2_derivs.append(nn_pos_opp2_deriv)
+        pp_derivs.append(pp_deriv)
+        nn_derivs.append(nn_deriv)
+        pn_derivs.append(pn_deriv)
 
 kappa_derivs = np.array(kappa_derivs)
 kappa_pos_derivs = np.array(kappa_pos_derivs)
 kappa_neg_derivs = np.array(kappa_neg_derivs)
 nn_pos_same2_derivs = np.array(nn_pos_same2_derivs)
 nn_pos_opp2_derivs = np.array(nn_pos_opp2_derivs)
+pp_derivs = np.array(pp_derivs)
+nn_derivs = np.array(nn_derivs)
+pn_derivs = np.array(pn_derivs)
 
 # Reshape to separate Om and s8 derivatives
 # Current shape: (256, n_bins) -> (128, 2, n_bins)
@@ -72,6 +85,9 @@ kappa_pos_derivs_mean, kappa_pos_derivs_cov, n_bins_pos = get_mean_cov_combined(
 kappa_neg_derivs_mean, kappa_neg_derivs_cov, n_bins_neg = get_mean_cov_combined(kappa_neg_derivs)
 nn_pos_same2_derivs_mean, nn_pos_same2_derivs_cov, n_bins_nn = get_mean_cov_combined(nn_pos_same2_derivs)
 nn_pos_opp2_derivs_mean, nn_pos_opp2_derivs_cov, _ = get_mean_cov_combined(nn_pos_opp2_derivs)
+pp_derivs_mean, pp_derivs_cov, n_bins_pp = get_mean_cov_combined(pp_derivs)
+nn_derivs_mean, nn_derivs_cov, n_bins_nn2 = get_mean_cov_combined(nn_derivs)
+pn_derivs_mean, pn_derivs_cov, n_bins_pn = get_mean_cov_combined(pn_derivs)
 
 kappa_fid = data_slics['kappa_mean']
 kappa_pos_fid = data_slics['kappa_pos_mean']
@@ -109,6 +125,7 @@ bin_edges1 = data_slics['bin_edges1']
 bin_edges2 = data_slics['bin_edges2']
 bin_edges4 = data_slics['bin_edges4']
 bin_edges8 = data_slics['bin_edges8']
+theta_bins = data_slics['theta']
 
 # Plotting
 import matplotlib.pyplot as plt
@@ -130,15 +147,15 @@ bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 n = n_bins_kappa
 
 ax.plot(bin_centers[:-2], kappa_fid, c='black')
-ax.errorbar(bin_centers[:-2], kappa_fid, yerr=np.sqrt(np.diag(kappa_cov)) , fmt='|', label='Fiducial', c='black')
+ax.errorbar(bin_centers[:-2], kappa_fid, yerr=np.sqrt(np.diag(kappa_cov))/np.sqrt(924*4) , fmt='|', label='Fiducial', c='black')
 ax.errorbar(bin_centers[:-2], kappa_derivs_mean[0:n], 
-            yerr=np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) , 
+            yerr=np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples) , 
             fmt='|', label=r'Derv. w.r.t $\Omega_m$')
 ax.errorbar(bin_centers[:-2], kappa_derivs_mean[n:2*n], 
-            yerr=np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) , 
+            yerr=np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples) , 
             fmt='|', label=r'Derv. w.r.t $\sigma_8$')
-ax.fill_between(bin_centers[:-2], kappa_derivs_mean[0:n] - np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) , kappa_derivs_mean[0:n] + np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n])) , alpha=0.3)
-ax.fill_between(bin_centers[:-2], kappa_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) , kappa_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n])) , alpha=0.3)
+ax.fill_between(bin_centers[:-2], kappa_derivs_mean[0:n] - np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples) , kappa_derivs_mean[0:n] + np.sqrt(np.diag(kappa_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples) , alpha=0.3)
+ax.fill_between(bin_centers[:-2], kappa_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples) , kappa_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples) , alpha=0.3)
 
 ax.set_xlabel(r'$\kappa$')
 ax.set_ylabel('Probability Density')
@@ -148,90 +165,159 @@ plt.savefig('outfiles/derivs_pdf.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 # 2. DPDF (Pos and Neg)
-fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(5, 2), sharey=True)
 
 # Pos
 ax = axes[0]
 n = n_bins_pos
-ax.plot(bin_edges, kappa_pos_fid, c='black')
-ax.errorbar(bin_edges, kappa_pos_fid, yerr=np.sqrt(np.diag(kappa_pos_cov)) , fmt='|', label='Fiducial', c='black')
-ax.errorbar(bin_edges, kappa_pos_derivs_mean[0:n], 
-            yerr=np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) , 
-            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
-ax.errorbar(bin_edges, kappa_pos_derivs_mean[n:2*n], 
-            yerr=np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) , 
-            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
-ax.fill_between(bin_edges, kappa_pos_derivs_mean[0:n] - np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) , kappa_pos_derivs_mean[0:n] + np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n])) , alpha=0.3)
-ax.fill_between(bin_edges, kappa_pos_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) , kappa_pos_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n])) , alpha=0.3)
+# Omega_m
+y = kappa_pos_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(bin_edges, y, c='C0', ls='-', label=r'$\partial {\rm CDF}(\kappa) / \partial \Omega_{\rm m}$')
+ax.fill_between(bin_edges, y - y_err, y + y_err, color='C0', alpha=0.3)
+
+# Sigma_8
+y = kappa_pos_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(bin_edges, y, c='C1', ls='-', label=r'$\partial {\rm CDF}(\kappa) / \partial \sigma_8$')
+ax.fill_between(bin_edges, y - y_err, y + y_err, color='C1', alpha=0.3)
+
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
 ax.set_xlabel(r'$\kappa$')
-ax.set_ylabel(r'$C^{p,n}(\kappa)$')
-ax.set_title('Defect CDF+')
-ax.set_xticks(np.array([-0.01, 0, 0.01]))
-# ax.grid(True, alpha=0.3)
+ax.set_ylabel(r'$\partial {\rm CDF}(\kappa) / \partial p$')
+ax.set_title(r'$\partial C^{\rm P}(\kappa) / \partial p$')
+ax.set_xticks(np.array([-0.02, -0.01, 0, 0.01, 0.02]))
 
 # Neg
 ax = axes[1]
 n = n_bins_neg
-ax.plot(bin_edges, kappa_neg_fid, c='black')
-ax.errorbar(bin_edges, kappa_neg_fid, yerr=np.sqrt(np.diag(kappa_neg_cov)) , fmt='|', label='Fiducial', c='black')
-ax.errorbar(bin_edges, kappa_neg_derivs_mean[0:n], 
-            yerr=np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) , 
-            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
-ax.errorbar(bin_edges, kappa_neg_derivs_mean[n:2*n], 
-            yerr=np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) , 
-            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
-ax.fill_between(bin_edges, kappa_neg_derivs_mean[0:n] - np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) , kappa_neg_derivs_mean[0:n] + np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n])) , alpha=0.3)
-ax.fill_between(bin_edges, kappa_neg_derivs_mean[n:2*n] - np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) , kappa_neg_derivs_mean[n:2*n] + np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n])) , alpha=0.3)
-ax.set_xlabel(r'$\kappa$')
-ax.set_title('Defect CDF-')
-ax.set_xticks(np.array([-0.01, 0, 0.01]))
-# ax.grid(True, alpha=0.3)
+# Omega_m
+y = kappa_neg_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(kappa_neg_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(bin_edges, y, c='C0', ls='-')
+ax.fill_between(bin_edges, y - y_err, y + y_err, color='C0', alpha=0.3)
 
-plt.legend(loc='upper left', bbox_to_anchor=(1.05, 0.55))
+# Sigma_8
+y = kappa_neg_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(kappa_neg_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(bin_edges, y, c='C1', ls='-')
+ax.fill_between(bin_edges, y - y_err, y + y_err, color='C1', alpha=0.3)
+
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_xlabel(r'$\kappa$')
+ax.set_title(r'$\partial C^{\rm N}(\kappa) / \partial p$')
+ax.set_xticks(np.array([-0.02, -0.01, 0, 0.01, 0.02]))
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
+
 plt.subplots_adjust(wspace=0)
-plt.savefig('outfiles/derivs_dpdf.png', dpi=300, bbox_inches='tight')
+plt.savefig('outfiles/derivs_dcdf.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 # 3. NNs
-fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(5, 2), sharey=True)
 n = n_bins_nn
 
 # 2NN Same
 ax = axes[0]
-ax.plot(bin_edges2, nn_pos_same2_fid, c='black')
-ax.errorbar(bin_edges2, nn_pos_same2_fid, yerr=np.sqrt(np.diag(nn_pos_same2_cov)) , fmt='|', label='Fiducial', c='black')
-ax.errorbar(bin_edges2, nn_pos_same2_derivs_mean[0:n], 
-            yerr=np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) , 
-            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
-ax.errorbar(bin_edges2, nn_pos_same2_derivs_mean[n:2*n], 
-            yerr=np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) , 
-            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
-ax.fill_between(bin_edges2, nn_pos_same2_derivs_mean[0:n] - np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) , nn_pos_same2_derivs_mean[0:n] + np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n])) , alpha=0.3)
-ax.fill_between(bin_edges2, nn_pos_same2_derivs_mean[n:2*n] - np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) , nn_pos_same2_derivs_mean[n:2*n] + np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n])) , alpha=0.3)
-ax.set_title('2NN Same CDF')
-ax.set_ylabel(r'$C^{pp,pn}_{\rm 2nd}(\theta)$')
-ax.set_xlabel('Distance (arcmin)')
-# ax.grid(True, alpha=0.3)
+# Omega_m
+y = nn_pos_same2_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial {\rm CDF}(\theta) / \partial \Omega_{\rm m}$')
+ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.3)
+
+# Sigma_8
+y = nn_pos_same2_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial {\rm CDF}(\theta) / \partial \sigma_8$')
+ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.3)
+
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_title(r'$\partial C^{\rm P}(\theta) / \partial p$')
+ax.set_ylabel(r'$\partial {\rm CDF}(\theta) / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
 
 # 2NN Opp
 ax = axes[1]
-ax.plot(bin_edges2, nn_pos_opp2_fid, c='black')
-ax.errorbar(bin_edges2, nn_pos_opp2_fid, yerr=np.sqrt(np.diag(nn_pos_opp2_cov)) , fmt='|', label='Fiducial', c='black')
-ax.errorbar(bin_edges2, nn_pos_opp2_derivs_mean[0:n], 
-            yerr=np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) , 
-            fmt='|', label=r'Derv. w.r.t $\Omega_m$')
-ax.errorbar(bin_edges2, nn_pos_opp2_derivs_mean[n:2*n], 
-            yerr=np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) , 
-            fmt='|', label=r'Derv. w.r.t $\sigma_8$')
-ax.fill_between(bin_edges2, nn_pos_opp2_derivs_mean[0:n] - np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) , nn_pos_opp2_derivs_mean[0:n] + np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n])) , alpha=0.3)
-ax.fill_between(bin_edges2, nn_pos_opp2_derivs_mean[n:2*n] - np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) , nn_pos_opp2_derivs_mean[n:2*n] + np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n])) , alpha=0.3)
-ax.set_title('2NN Opp CDF')
-ax.set_xlabel('Distance (arcmin)')
-# ax.grid(True, alpha=0.3)
+# Omega_m
+y = nn_pos_opp2_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C0', ls='-')
+ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.3)
 
-plt.legend(loc='upper left', bbox_to_anchor=(1.05, 0.55))
-plt.subplots_adjust(wspace=0)
+# Sigma_8
+y = nn_pos_opp2_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C1', ls='-')
+ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.3)
+
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_title(r'$\partial C^{\rm N}(\theta) / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
+
+plt.subplots_adjust(wspace=0.1)
 plt.savefig('outfiles/derivs_nns.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# derivs pp, nn, pn 
+fig, axes = plt.subplots(1, 3, figsize=(7.5, 2), sharey=True)
+n = n_bins_pp
+# PP
+ax = axes[0]
+# Omega_m
+y = pp_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(pp_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C0', ls='-', label=r'$\partial pp(\theta) / \partial \Omega_{\rm m}$')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C0', alpha=0.3)
+# Sigma_8
+y = pp_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(pp_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C1', ls='-', label=r'$\partial pp(\theta) / \partial \sigma_8$')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C1', alpha=0.3)
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_title(r'$\partial pp(\theta) / \partial p$')
+ax.set_ylabel(r'$\partial pp(\theta) / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
+# NN
+ax = axes[1]
+n = n_bins_nn2
+# Omega_m
+y = nn_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(nn_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C0', ls='-')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C0', alpha=0.3)
+# Sigma_8
+y = nn_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(nn_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C1', ls='-')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C1', alpha=0.3)
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_title(r'$\partial nn(\theta) / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
+# PN
+ax = axes[2]
+n = n_bins_pn
+# Omega_m
+y = pn_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(pn_derivs_cov[0:n, 0:n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C0', ls='-')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C0', alpha=0.3)
+# Sigma_8
+y = pn_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(pn_derivs_cov[n:2*n, n:2*n]))/np.sqrt(N_samples)
+ax.plot(theta_bins, y, c='C1', ls='-')
+ax.fill_between(theta_bins, y - y_err, y + y_err, color='C1', alpha=0.3)
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_title(r'$\partial pn(\theta) / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
+plt.subplots_adjust(wspace=0.3)
+plt.savefig('outfiles/derivs_pp_nn_pn.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 #====================================================================================
@@ -288,63 +374,63 @@ plt.subplots_adjust(wspace=0)
 plt.savefig('outfiles/sg8_om_cdf.png', dpi=300, bbox_inches='tight')
 plt.close() 
 
-# dpdf, pdf cov
+# # dpdf, pdf cov
 
-all_and_pdf_cov = data_slics['all_and_pdf_cov']
-# take first 60 and last 28
-cdf_cov = all_and_pdf_cov[np.ix_(list(range(60)) + list(range(all_and_pdf_cov.shape[0]-28, all_and_pdf_cov.shape[0])), list(range(60)) + list(range(all_and_pdf_cov.shape[0]-28, all_and_pdf_cov.shape[0])))]
+# all_and_pdf_cov = data_slics['all_and_pdf_cov']
+# # take first 60 and last 28
+# cdf_cov = all_and_pdf_cov[np.ix_(list(range(60)) + list(range(all_and_pdf_cov.shape[0]-28, all_and_pdf_cov.shape[0])), list(range(60)) + list(range(all_and_pdf_cov.shape[0]-28, all_and_pdf_cov.shape[0])))]
 
-plt.figure(figsize=(4, 3))
-# normalize covariance to correlation matrix
-d = np.sqrt(np.diag(cdf_cov))
-corr = cdf_cov / np.outer(d, d)
-plt.imshow(corr, cmap='RdBu', vmin=-1, vmax=1)
-plt.colorbar(label='Correlation Coefficient')
-plt.title('Correlation Matrix (DCDF + PDF)')
-# add lines to separate different parts
-plt.axvline(x=29.5, color='black', linestyle='--', linewidth=1)
-plt.axhline(y=29.5, color='black', linestyle='--', linewidth=1)
-plt.axvline(x=60.5, color='black', linestyle='--', linewidth=1)
-plt.axhline(y=60.5, color='black', linestyle='--', linewidth=1)
+# plt.figure(figsize=(4, 3))
+# # normalize covariance to correlation matrix
+# d = np.sqrt(np.diag(cdf_cov))
+# corr = cdf_cov / np.outer(d, d)
+# plt.imshow(corr, cmap='RdBu', vmin=-1, vmax=1)
+# plt.colorbar(label='Correlation Coefficient')
+# plt.title('Correlation Matrix (DCDF + PDF)')
+# # add lines to separate different parts
+# plt.axvline(x=29.5, color='black', linestyle='--', linewidth=1)
+# plt.axhline(y=29.5, color='black', linestyle='--', linewidth=1)
+# plt.axvline(x=60.5, color='black', linestyle='--', linewidth=1)
+# plt.axhline(y=60.5, color='black', linestyle='--', linewidth=1)
 
-# ticks
-plt.xticks([15, 45, 74], [r'$DCDF+$', r'$DCDF-$', r'PDF'])
-plt.yticks([15, 45, 74], [r'$DCDF+$', r'$DCDF-$', r'PDF'])
-plt.tick_params(axis='both', which='both', length=0)
-plt.savefig('outfiles/corr_matrix_cdf.png', dpi=300, bbox_inches='tight')
-plt.close()
+# # ticks
+# plt.xticks([15, 45, 74], [r'$DCDF+$', r'$DCDF-$', r'PDF'])
+# plt.yticks([15, 45, 74], [r'$DCDF+$', r'$DCDF-$', r'PDF'])
+# plt.tick_params(axis='both', which='both', length=0)
+# plt.savefig('outfiles/corr_matrix_cdf.png', dpi=300, bbox_inches='tight')
+# plt.close()
 
-# compare 1, 2, 4, 8 NN
-plt.figure(figsize=(4, 3))
-plt.plot(bin_edges1, nn_pos_same1_fid, label='1NN ++', c=color_map(0))
-plt.plot(bin_edges1, nn_pos_opp1_fid, label='1NN +-', c=color_map(0), linestyle='dashed')
-plt.plot(bin_edges2, nn_pos_same2_fid, label='2NN ++', c=color_map(1))
-plt.plot(bin_edges2, nn_pos_opp2_fid, label='2NN +-', c=color_map(1), linestyle='dashed')
-plt.plot(bin_edges4, nn_pos_same4_fid, label='4NN ++', c=color_map(2))
-plt.plot(bin_edges4, nn_pos_opp4_fid, label='4NN +-', c=color_map(2), linestyle='dashed')
-plt.plot(bin_edges8, nn_pos_same8_fid, label='8NN ++', c=color_map(3))
-plt.plot(bin_edges8, nn_pos_opp8_fid, label='8NN +-', c=color_map(3), linestyle='dashed')
-# plt.xscale('log')
-# plt.yscale('log')
-plt.xlabel('Distance (arcmin)')
-plt.ylabel('Cumulative Number Distribution')
-plt.title('Comparison of kNNs')
-plt.legend()
-# plt.grid(True, alpha=0.3)
-plt.savefig('outfiles/compare_knn_cdf.png', dpi=300, bbox_inches='tight')
-plt.close()
+# # compare 1, 2, 4, 8 NN
+# plt.figure(figsize=(4, 3))
+# plt.plot(bin_edges1, nn_pos_same1_fid, label='1NN ++', c=color_map(0))
+# plt.plot(bin_edges1, nn_pos_opp1_fid, label='1NN +-', c=color_map(0), linestyle='dashed')
+# plt.plot(bin_edges2, nn_pos_same2_fid, label='2NN ++', c=color_map(1))
+# plt.plot(bin_edges2, nn_pos_opp2_fid, label='2NN +-', c=color_map(1), linestyle='dashed')
+# plt.plot(bin_edges4, nn_pos_same4_fid, label='4NN ++', c=color_map(2))
+# plt.plot(bin_edges4, nn_pos_opp4_fid, label='4NN +-', c=color_map(2), linestyle='dashed')
+# plt.plot(bin_edges8, nn_pos_same8_fid, label='8NN ++', c=color_map(3))
+# plt.plot(bin_edges8, nn_pos_opp8_fid, label='8NN +-', c=color_map(3), linestyle='dashed')
+# # plt.xscale('log')
+# # plt.yscale('log')
+# plt.xlabel('Distance (arcmin)')
+# plt.ylabel('Cumulative Number Distribution')
+# plt.title('Comparison of kNNs')
+# plt.legend()
+# # plt.grid(True, alpha=0.3)
+# plt.savefig('outfiles/compare_knn_cdf.png', dpi=300, bbox_inches='tight')
+# plt.close()
 
-# compare pos 2nn ++/+- and neg 2nn --/-+
-plt.figure(figsize=(4.8, 3))
-plt.plot(bin_edges2, nn_pos_same2_fid, label='2NN ++', c=color_map(0))
-plt.plot(bin_edges2, nn_pos_opp2_fid, label='2NN +-', c=color_map(0), linestyle='dashed')
-plt.plot(bin_edges2, nn_neg_same2_fid, label='2NN --', c=color_map(1))
-plt.plot(bin_edges2, nn_neg_opp2_fid, label='2NN -+', c=color_map(1), linestyle='dashed')
-plt.xlabel('Distance (arcmin)')
-plt.ylabel('Cumulative Number Distribution')
-# plt.title('Comparison of 2NN Positive and Negative')
-plt.legend(loc='upper left')
-plt.text(0.9, 0.1, 'Euclid-like', ha='right', va='bottom', transform=plt.gca().transAxes, fontsize=12)
-# plt.grid(True, alpha=0.3)
-plt.savefig('outfiles/compare_2nn_pos_neg_cdf.png', dpi=300)
-plt.close()
+# # compare pos 2nn ++/+- and neg 2nn --/-+
+# plt.figure(figsize=(4.8, 3))
+# plt.plot(bin_edges2, nn_pos_same2_fid, label='2NN ++', c=color_map(0))
+# plt.plot(bin_edges2, nn_pos_opp2_fid, label='2NN +-', c=color_map(0), linestyle='dashed')
+# plt.plot(bin_edges2, nn_neg_same2_fid, label='2NN --', c=color_map(1))
+# plt.plot(bin_edges2, nn_neg_opp2_fid, label='2NN -+', c=color_map(1), linestyle='dashed')
+# plt.xlabel('Distance (arcmin)')
+# plt.ylabel('Cumulative Number Distribution')
+# # plt.title('Comparison of 2NN Positive and Negative')
+# plt.legend(loc='upper left')
+# plt.text(0.9, 0.1, 'Euclid-like', ha='right', va='bottom', transform=plt.gca().transAxes, fontsize=12)
+# # plt.grid(True, alpha=0.3)
+# plt.savefig('outfiles/compare_2nn_pos_neg_cdf.png', dpi=300)
+# plt.close()
