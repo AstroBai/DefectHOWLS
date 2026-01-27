@@ -681,11 +681,11 @@ kappa_neg_samples = GaussianND(mean=params_fid, cov=cov_kappa_neg, names=names, 
 kappa_all_samples = GaussianND(mean=params_fid, cov=cov_kappa_all, names=names, labels=labels, label=r"$C^{\mathrm{all}}(\kappa)$")
 nn_all_samples = GaussianND(mean=params_fid, cov=cov_nn_all, names=names, labels=labels, label=r"$C^{\mathrm{all}}_{1, 2, 4, 8}(\theta)$")
 all_samples = GaussianND(mean=params_fid, cov=cov_all, names=names, labels=labels, label=r"$DCDP + kNN$")
-kk_samples = GaussianND(mean=params_fid, cov=cov_kk, names=names, labels=labels, label=r"$\xi^{\kappa\kappa}(\theta)$")
+kk_samples = GaussianND(mean=params_fid, cov=cov_kk, names=names, labels=labels, label=r"$\kappa$-2PCF")
 all_and_pdf_samples = GaussianND(mean=params_fid, cov=cov_all_and_pdf, names=names, labels=labels, label=r"$All HOWLS$")
-all_howls_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_howls_and_kk, names=names, labels=labels, label=r"$ALL HOWLS + \xi^{\kappa\kappa}(\theta)$")
-all_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_and_kk, names=names, labels=labels, label=r"$All HOWLS + \xi^{\kappa\kappa}(\theta)$")
-dcorr_samples = GaussianND(mean=params_fid, cov=cov_dcorr, names=names, labels=labels, label=r"$Defect 2PCFs$")
+all_howls_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_howls_and_kk, names=names, labels=labels, label=r"$ALL HOWLS + \kappa\text{-2PCF}$")
+all_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_and_kk, names=names, labels=labels, label=r"$All HOWLS + \kappa\text{-2PCF}$")
+dcorr_samples = GaussianND(mean=params_fid, cov=cov_dcorr, names=names, labels=labels, label=r"$D-2PCF$")
 
 import matplotlib.pyplot as plt
 from getdist import plots
@@ -702,10 +702,10 @@ g.settings.num_plot_contours = 1
 g.plot_2d([kk_samples, kappa_samples, kappa_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
-            lims = [0.295, 0.33, 0.82, 0.865],
+            lims = [0.3, 0.325, 0.825, 0.86],
             colors = [color_map(i) for i in range(2)] + ['red'],
             lws=2)
-g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"DCDFs"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"PDF", r"D-CDF"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/dcdf.png", dpi=300)
 # pdf nn_1, nn_2, nn_4, nn_8, nn_all
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
@@ -713,10 +713,10 @@ g.settings.num_plot_contours = 1
 g.plot_2d([kk_samples, kappa_samples, nn_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
-            lims = [0.295, 0.33, 0.82, 0.865],
+            lims = [0.3, 0.325, 0.825, 0.86],
             colors = [color_map(i) for i in range(2)] + ['red'],
             lws=2)
-g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"kNNs"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"PDF", r"kNNs"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/nns.png", dpi=300)
 
 # kappa_all nn_all all
@@ -725,11 +725,11 @@ g.settings.num_plot_contours = 1
 g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_pdf_samples, all_howls_and_kk_samples],
           param1="Om", param2="sigma8",
             filled=False,
-            lims = [0.295, 0.33, 0.82, 0.865],
+            lims = [0.3, 0.325, 0.825, 0.86],
             colors = [color_map(i) for i in range(4)] + ['red', 'black'],
             ls = ['solid', 'solid', 'solid', 'solid', 'solid', 'dashed'],
             lws=2)
-g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defects", r"$\text{Defects} + \xi^{\kappa\kappa}(\theta)$", r"All HOWLS", r"$\text{All HOWLS} + \xi^{\kappa\kappa}(\theta)$"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"PDF", r"Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"All HOWLS", r"$\text{All HOWLS} + \kappa\text{-2PCF}$"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/combined.png", dpi=300)
           
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
@@ -737,10 +737,10 @@ g.settings.num_plot_contours = 1
 g.plot_2d([kk_samples, kappa_samples, dcorr_samples, nn_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
-            lims = [0.295, 0.33, 0.82, 0.865],
+            lims = [0.3, 0.325, 0.825, 0.86],
             colors = [color_map(i) for i in range(3)] + ['red'],
             lws=2)
-g.add_legend([r"$\xi^{\kappa\kappa}(\theta)$", r"PDF", r"Defect 2PCFs", r"kNNs"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"PDF", r"D-2PCF", r"kNNs"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/dcorr.png", dpi=300)
 
 # print 1 sigma errors
@@ -759,44 +759,65 @@ print(f"All and kk: {np.sqrt(np.diag(cov_all_and_kk))}")
 # plot errors with horizontal errorbar-like plot
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-labels = [r"$\xi^{\kappa\kappa}(\theta)$", "PDF", "Defects", r"$\text{Defects} + \xi^{\kappa\kappa}(\theta)$", "All HOWLS", r"All HOWLS + $\xi^{\kappa\kappa}(\theta)$"]
+
+def get_sigma_s8(cov, params_fid):
+    Om, s8 = params_fid
+    S8 = s8 * np.sqrt(Om/0.3)
+    J = np.array([0.5 * S8 / Om, S8 / s8])
+    return np.sqrt(J @ cov @ J.T)
+
+labels = [r"$\kappa$-2PCF", "PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "All HOWLS", r"All HOWLS + $\kappa\text{-2PCF}$"]
 sigma_om = np.array([np.sqrt(cov_kk[0,0]), np.sqrt(cov_kappa[0,0]), np.sqrt(cov_all[0,0]), np.sqrt(cov_all_and_kk[0,0]), np.sqrt(cov_all_and_pdf[0,0]), np.sqrt(cov_all_howls_and_kk[0,0])])
 sigma_sigma8 = np.array([np.sqrt(cov_kk[1,1]), np.sqrt(cov_kappa[1,1]), np.sqrt(cov_all[1,1]), np.sqrt(cov_all_and_kk[1,1]), np.sqrt(cov_all_and_pdf[1,1]), np.sqrt(cov_all_howls_and_kk[1,1])])
+sigma_s8 = np.array([get_sigma_s8(c, params_fid) for c in [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]])
 
 # Normalize for color intensity (smaller error = darker color, stronger constraint)
 norm_om = 0.8 - (sigma_om - sigma_om.min()) / (sigma_om.max() - sigma_om.min())
 norm_sigma8 = 0.8 - (sigma_sigma8 - sigma_sigma8.min()) / (sigma_sigma8.max() - sigma_sigma8.min())
-max_err = max(sigma_om.max(), sigma_sigma8.max())
+norm_s8 = 0.8 - (sigma_s8 - sigma_s8.min()) / (sigma_s8.max() - sigma_s8.min())
+max_err = max(sigma_om.max(), sigma_sigma8.max(), sigma_s8.max())
 
 x = np.arange(len(labels))
-width = 0.35  # the offset between the two error bars
+width = 0.25  # the offset between the error bars
 
-fig, ax = plt.subplots(figsize=(5, 3))
+fig, ax = plt.subplots(figsize=(6, 4))
 
 # Plot Om_m errors
-for i, (y_pos, err, intensity) in enumerate(zip(x - width/2, sigma_om, norm_om)):
-    color = cm.Blues(0.3 + 0.7 * intensity)  # Darker = stronger constraint
+for i, (y_pos, err, intensity) in enumerate(zip(x - width, sigma_om, norm_om)):
+    color = cm.Blues(0.3 + 0.7 * intensity)
     ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
-    if i == 0:  # label baseline xi row
+    if i == 0:
         ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:  # annotate factor vs xi
+    if i > 0:
         factor = sigma_om[0] / err
         ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
 
 # Plot sigma_8 errors  
-for i, (y_pos, err, intensity) in enumerate(zip(x + width/2, sigma_sigma8, norm_sigma8)):
-    color = cm.Oranges(0.3 + 0.7 * intensity)  # Darker = stronger constraint
+for i, (y_pos, err, intensity) in enumerate(zip(x, sigma_sigma8, norm_sigma8)):
+    color = cm.Oranges(0.3 + 0.7 * intensity)
     ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
-    if i == 0:  # label baseline xi row
+    if i == 0:
         ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:  # annotate factor vs xi
+    if i > 0:
         factor = sigma_sigma8[0] / err
+        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
+
+# Plot S8 errors
+for i, (y_pos, err, intensity) in enumerate(zip(x + width, sigma_s8, norm_s8)):
+    color = cm.Purples(0.3 + 0.7 * intensity)
+    ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
+    if i == 0:
+        ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
+    if i > 0:
+        factor = sigma_s8[0] / err
         ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
 
 # Add dummy plots for legend
 ax.plot([], [], color=cm.Blues(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\Omega_{\rm m}}$')
 ax.plot([], [], color=cm.Oranges(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\sigma_{\rm 8}}$')
-ax.set_xlabel(r'1$\sigma$ Range')
+ax.plot([], [], color=cm.Purples(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta S_8$')
+ax.set_xlabel(r'1$\sigma$ Error')
+# ax.set_xticks([0, 0.002, 0.004, 0.006, 0.008])
 ax.set_yticks(x)
 ax.set_yticklabels(labels)
 ax.tick_params(axis='y', which='both', length=0)  # Remove all y-axis tick marks

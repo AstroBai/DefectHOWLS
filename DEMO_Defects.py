@@ -85,7 +85,7 @@ im1 = ax1.imshow(conv_zoom, origin='lower', cmap='RdYlBu_r', extent=extent)
 # 使用 make_axes_locatable 创建与 ax1 高度一致的 colorbar
 divider1 = make_axes_locatable(ax1)
 cax1 = divider1.append_axes("right", size="5%", pad=0.1)
-plt.colorbar(im1, cax=cax1, label=r'Smoothed Convergence $\kappa$')
+plt.colorbar(im1, cax=cax1, label=r'Convergence $\kappa$')
 
 # Quiver (Downsampled)
 step = 8
@@ -162,7 +162,7 @@ im3 = ax3.imshow(phi_zoom, origin='lower', cmap='twilight', extent=extent)
 # 使用 make_axes_locatable 创建与 ax3 高度一致的 colorbar
 divider3 = make_axes_locatable(ax3)
 cax3 = divider3.append_axes("right", size="5%", pad=0.1)
-cbar3 = plt.colorbar(im3, cax=cax3, label=r'Shear Phase $\varphi$')
+cbar3 = plt.colorbar(im3, cax=cax3, label=r'Shear Orientation $\varphi$')
 
 # Define ticks for pi multiples
 # Assuming phi is in radians. Adjust range if your phi is defined differently (e.g. 0 to pi)
