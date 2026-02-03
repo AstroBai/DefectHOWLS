@@ -9,11 +9,11 @@ S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
 S809_DIR = f"{DATA_DIR}/LCDM_s80976624_ks_nomask_shear_new"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s234_fromshear.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s234_fromshear.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s234_fromshear.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s234_fromshear.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s234_fromshear_subfields.npz")
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -35,12 +35,12 @@ for seed in range(128):
     for i in range(2):
         if i == 0:
             delta_p = params[1,0] - params[0,0]
-            data_plus = np.load(f"{OM04_DIR}/OM04_stats_s467_th_{seed}.npz")
-            data_minus = np.load(f"{OM02_DIR}/OM02_stats_s467_th_{seed}.npz")
+            data_plus = np.load(f"{OM04_DIR}/OM04_stats_s234_fromshear_{seed}.npz")
+            data_minus = np.load(f"{OM02_DIR}/OM02_stats_s234_fromshear_{seed}.npz")
         else:
             delta_p = params[3,1] - params[2,1]
-            data_plus = np.load(f"{S809_DIR}/S809_stats_s467_th_{seed}.npz")
-            data_minus = np.load(f"{S807_DIR}/S807_stats_s467_th_{seed}.npz")
+            data_plus = np.load(f"{S809_DIR}/S809_stats_s234_fromshear_{seed}.npz")
+            data_minus = np.load(f"{S807_DIR}/S807_stats_s234_fromshear_{seed}.npz")
 
         kappa_deriv = (data_plus['kappa'] - data_minus['kappa']) / delta_p
         kappa_pos_deriv = (data_plus['kappa_pos_cum'] - data_minus['kappa_pos_cum']) / delta_p
@@ -144,6 +144,15 @@ import matplotlib.ticker as mticker
 mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
 mpl.rcParams['font.size'] = 8
+mpl.rcParams['axes.formatter.use_mathtext'] = True
+
+
+def sci_format_func(x, pos):
+    if x == 0:
+        return "0"
+    exponent = int(np.floor(np.log10(abs(x))))
+    coeff = x / 10**exponent
+    return r"${:.0f} \times 10^{{{}}}$".format(coeff, exponent)
 
 
 if not os.path.exists('outfiles'):
@@ -197,6 +206,7 @@ ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
 ax.set_xlabel(r'$\kappa$')
 # ax.set_title(r'$\partial C^{\rm N}(\kappa) / \partial p$')
 ax.set_xticks(np.array([-0.04, -0.02, 0, 0.02, 0.04]))
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(sci_format_func))
 
 handles, labels = ax.get_legend_handles_labels()
 fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
@@ -211,6 +221,7 @@ n = n_bins_nn
 
 # 2NN Same
 ax = axes[0]
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(sci_format_func))
 # Omega_m
 y = nn_pos_same2_derivs_mean[0:n]
 y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n]))
@@ -387,3 +398,6 @@ plt.text(0.9, 0.1, 'Euclid-like', ha='right', va='bottom', transform=plt.gca().t
 # plt.grid(True, alpha=0.1)
 plt.savefig('outfiles/compare_2nn_pos_neg_cdf.png', dpi=300)
 plt.close()
+
+print("total number density derivative for all defects (Om):", kappa_pos_derivs_mean[n_bins_pos-1]+kappa_neg_derivs_mean[n_bins_neg-1])
+print("total number density derivative for all defects (s8):", kappa_pos_derivs_mean[2*n_bins_pos-1]+kappa_neg_derivs_mean[2*n_bins_neg-1])

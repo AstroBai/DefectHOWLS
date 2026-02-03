@@ -155,7 +155,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s234_fromshear_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -345,11 +345,11 @@ class FisherDataBlock:
 def create_block(name, key_mean, key_deriv, key_cov, key_samples):
     return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s234_fromshear.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s234_fromshear.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s234_fromshear.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s234_fromshear.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s234_fromshear_subfields.npz")
 
 slics_samples = load_slics_samples(SLICS_DIR)
 
