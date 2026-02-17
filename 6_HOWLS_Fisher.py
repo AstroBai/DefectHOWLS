@@ -155,7 +155,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_fromshear_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -345,11 +345,11 @@ class FisherDataBlock:
 def create_block(name, key_mean, key_deriv, key_cov, key_samples):
     return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_fromshear.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_fromshear.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th_fromshear.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th_fromshear.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_fromshear_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
 
 slics_samples = load_slics_samples(SLICS_DIR)
 
@@ -760,73 +760,132 @@ print(f"All and kk: {np.sqrt(np.diag(cov_all_and_kk))}")
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-def get_sigma_s8(cov, params_fid):
-    Om, s8 = params_fid
-    S8 = s8 * np.sqrt(Om/0.3)
-    J = np.array([0.5 * S8 / Om, S8 / s8])
-    return np.sqrt(J @ cov @ J.T)
+# Define External Data
+# Label, rel_err_om (%), rel_err_sigma8 (%)
+external_data = [
+    ("Peaks", 0.70, 0.45),
+    ("MFs", 0.74, 0.35),
+    ("BNs", 1.27, 0.72),
+    ("Pers. BNs", 0.60, 0.32),
+    ("Pers. heat.", 0.86, 0.56),
+    ("ST", 0.63, 0.39)
+]
 
-labels = [r"$\kappa$-2PCF", "PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "All HOWLS", r"All HOWLS + $\kappa\text{-2PCF}$"]
-sigma_om = np.array([np.sqrt(cov_kk[0,0]), np.sqrt(cov_kappa[0,0]), np.sqrt(cov_all[0,0]), np.sqrt(cov_all_and_kk[0,0]), np.sqrt(cov_all_and_pdf[0,0]), np.sqrt(cov_all_howls_and_kk[0,0])])
-sigma_sigma8 = np.array([np.sqrt(cov_kk[1,1]), np.sqrt(cov_kappa[1,1]), np.sqrt(cov_all[1,1]), np.sqrt(cov_all_and_kk[1,1]), np.sqrt(cov_all_and_pdf[1,1]), np.sqrt(cov_all_howls_and_kk[1,1])])
-sigma_s8 = np.array([get_sigma_s8(c, params_fid) for c in [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]])
+# Calculate our relative errors in %
+fid_om = params_fid[0]
+fid_s8 = params_fid[1]
 
-# Normalize for color intensity (smaller error = darker color, stronger constraint)
-norm_om = 0.8 - (sigma_om - sigma_om.min()) / (sigma_om.max() - sigma_om.min())
-norm_sigma8 = 0.8 - (sigma_sigma8 - sigma_sigma8.min()) / (sigma_sigma8.max() - sigma_sigma8.min())
-norm_s8 = 0.8 - (sigma_s8 - sigma_s8.min()) / (sigma_s8.max() - sigma_s8.min())
-max_err = max(sigma_om.max(), sigma_sigma8.max(), sigma_s8.max())
+# Labels for our results
+our_labels = [r"$\kappa$-2PCF", "PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
+# Covariances for our results
+our_covs = [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]
 
-x = np.arange(len(labels))
-width = 0.25  # the offset between the error bars
+our_data = []
+for lbl, cov in zip(our_labels, our_covs):
+    err_om = np.sqrt(cov[0,0])
+    err_s8 = np.sqrt(cov[1,1])
+    rel_om = (err_om / fid_om) * 100
+    rel_s8 = (err_s8 / fid_s8) * 100
+    our_data.append((lbl, rel_om, rel_s8))
 
-fig, ax = plt.subplots(figsize=(6, 4))
+# Reverse the order for plotting top-to-bottom
+# We want our results at the top, then external results below
+all_data = our_data + external_data
 
-# Plot Om_m errors
-for i, (y_pos, err, intensity) in enumerate(zip(x - width, sigma_om, norm_om)):
-    color = cm.Blues(0.3 + 0.7 * intensity)
-    ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
+# Create Plot
+fig, ax = plt.subplots(figsize=(8, 4))
+
+y_pos = np.arange(len(all_data))
+
+# Extract values
+labels = [d[0] for d in all_data]
+vals_om = np.array([d[1] for d in all_data])
+vals_s8 = np.array([d[2] for d in all_data])
+
+# Calculate intensities (darker = smaller error = stronger constraint)
+# We can normalize based on the range of all data displayed
+min_om, max_om = vals_om.min(), vals_om.max()
+min_s8, max_s8 = vals_s8.min(), vals_s8.max()
+
+# Plot Bars
+# Use hlines or plot for thin bars with markers
+# Om bars to the left (negative direction for plotting, but labeled positive)
+# Sigma8 bars to the right
+
+for i, (om, s8) in enumerate(zip(vals_om, vals_s8)):
+    # Calculate intensity/alpha
+    # Stronger constraint (smaller value) -> Higher alpha/darker color
+    # Let alpha range from 0.4 to 1.0
+    alpha_om = 0.8 - 0.6 * (om - min_om) / (max_om - min_om)
+    alpha_s8 = 0.8 - 0.6 * (s8 - min_s8) / (max_s8 - min_s8)
+    
+    # Or map to color map intensity
+    # intensity_om = 0.3 + 0.7 * alpha_om (if using cm.Blues(intensity))
+    color_om = cm.Blues(0.3 + 0.7 * alpha_om)
+    color_s8 = cm.Oranges(0.3 + 0.7 * alpha_s8)
+    
+    if i == 2:
+        ax.plot([0, -om], [i, i], color=color_om, linewidth=2, marker='*', markevery=[1], markersize=10, markerfacecolor=color_om)
+        # Plot Sigma8 (Right)
+        ax.plot([0, s8], [i, i], color=color_s8, linewidth=2, marker='*', markevery=[1], markersize=10, markerfacecolor=color_s8)
+    else:
+        # Plot Om (Left)
+        ax.plot([0, -om], [i, i], color=color_om, linewidth=2, marker='s', markevery=[1], markersize=6, markerfacecolor=color_om)
+        # Plot Sigma8 (Right)
+        ax.plot([0, s8], [i, i], color=color_s8, linewidth=2, marker='s', markevery=[1], markersize=6, markerfacecolor=color_s8)
+
+    # Add text labels, times improved over kappa-2PCF (first entry in our data) for our results, and % for all
+    # Om Label (left)
     if i == 0:
-        ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:
-        factor = sigma_om[0] / err
-        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
+        ax.text(-om - 0.1, i, f"{om:.2f}%", va='center', ha='right', fontsize=9, color=color_om)
+        # Sigma8 Label (right)
+        ax.text(s8 + 0.1, i, f"{s8:.2f}%", va='center', ha='left', fontsize=9, color=color_s8)
+    else:
+        ratio_om = vals_om[0] / om
+        ratio_s8 = vals_s8[0] / s8
+        ax.text(-om - 0.1, i, f"{ratio_om:.1f}x", va='center', ha='right', fontsize=9, color=color_om)
+        # Sigma8 Label (right)
+        ax.text(s8 + 0.1, i, f"{ratio_s8:.1f}x", va='center', ha='left', fontsize=9, color=color_s8)
 
-# Plot sigma_8 errors  
-for i, (y_pos, err, intensity) in enumerate(zip(x, sigma_sigma8, norm_sigma8)):
-    color = cm.Oranges(0.3 + 0.7 * intensity)
-    ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
-    if i == 0:
-        ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:
-        factor = sigma_sigma8[0] / err
-        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
+# Dummy plots for legend
+ax.plot([], [], color=cm.Blues(0.8), linewidth=2, marker='s', markersize=6, label=r'$\delta \Omega_{\rm m} / \Omega_{\rm m} [\%]$')
+ax.plot([], [], color=cm.Oranges(0.8), linewidth=2, marker='s', markersize=6, label=r'$\delta \sigma_8 / \sigma_8 [\%]$')
 
-# Plot S8 errors
-for i, (y_pos, err, intensity) in enumerate(zip(x + width, sigma_s8, norm_s8)):
-    color = cm.Purples(0.3 + 0.7 * intensity)
-    ax.plot([0, err], [y_pos, y_pos], color=color, linewidth=3, marker='s', markevery=[1], markersize=6, markerfacecolor=color)
-    if i == 0:
-        ax.text(err + 0.02 * max_err, y_pos, fr"{err:.4f}", va='center', ha='left', color=color, fontsize=7)
-    if i > 0:
-        factor = sigma_s8[0] / err
-        ax.text(err + 0.02 * max_err, y_pos, f"{factor:.1f}x", va='center', ha='left', color=color, fontsize=7)
+# text: This Work, Euclid HOWLS
+ax.text(-max(vals_om)*1.3 + 0.1, len(our_data)-1, "This Work", va='center', ha='left', fontsize=9)
+ax.text(-max(vals_om)*1.3 + 0.1, len(our_data), "Euclid HOWLS", va='center', ha='left', fontsize=9)
 
-# Add dummy plots for legend
-ax.plot([], [], color=cm.Blues(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\Omega_{\rm m}}$')
-ax.plot([], [], color=cm.Oranges(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta {\sigma_{\rm 8}}$')
-ax.plot([], [], color=cm.Purples(0.8), linewidth=3, marker='s', markersize=6, label=r'$\Delta S_8$')
-ax.set_xlabel(r'1$\sigma$ Error')
-# ax.set_xticks([0, 0.002, 0.004, 0.006, 0.008])
-ax.set_yticks(x)
+# Dashed line separating ours and external
+sep_index = len(our_data) - 0.5
+ax.axhline(y=sep_index, color='black', linestyle='--', linewidth=1)
+
+# defects results shaded region
+ax.axvspan(-vals_om[2], vals_s8[2], color='gray', alpha=0.1)
+
+ax.set_xlim(-max(vals_om)*1.4, max(vals_s8)*1.4)
+
+# Formatting
+ax.set_yticks(y_pos)
 ax.set_yticklabels(labels)
-ax.tick_params(axis='y', which='both', length=0)  # Remove all y-axis tick marks
-ax.invert_yaxis()  # labels read top-to-bottom
-ax.set_xlim(0, max_err * 1.15)
-ax.legend()
+ax.invert_yaxis() # Top to bottom
+
+# Set x-axis labels to be positive on both sides
+ticks = ax.get_xticks()
+ax.set_xticklabels([f"{abs(t):.1f}" for t in ticks])
+
+ax.set_xlabel(r'Relative Precision [%]')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=2)
+# legend with text in color, left bottom for Om, right for Sigma8
+
+
+# Central line
+ax.axvline(x=0, color='black', linewidth=0.8)
+
 plt.tight_layout()
 plt.savefig("outfiles/1sigma_bars.png", dpi=300)
 plt.close()
 
 # save fisher matrix for defects
-np.save("outfiles/defects_fisher_s467_th_fromshear.npy", fisher_mats['all'])
+np.save("outfiles/defects_fisher_s467_th.npy", fisher_mats['all'])
+# save pdf results
+np.save("outfiles/pdf_fisher_s467_th_KL0.1.npy", fisher_mats['kappa'])

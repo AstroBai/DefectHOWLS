@@ -9,11 +9,11 @@ S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
 S809_DIR = f"{DATA_DIR}/LCDM_s80976624_ks_nomask_shear_new"
 SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_fromshear.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_fromshear.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th_fromshear.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th_fromshear.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_fromshear_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
 
 params = np.array([[0.2000, 0.842],
                   [0.4000, 0.842],
@@ -35,12 +35,12 @@ for seed in range(128):
     for i in range(2):
         if i == 0:
             delta_p = params[1,0] - params[0,0]
-            data_plus = np.load(f"{OM04_DIR}/OM04_stats_s467_th_fromshear_{seed}.npz")
-            data_minus = np.load(f"{OM02_DIR}/OM02_stats_s467_th_fromshear_{seed}.npz")
+            data_plus = np.load(f"{OM04_DIR}/OM04_stats_s467_th_{seed}.npz")
+            data_minus = np.load(f"{OM02_DIR}/OM02_stats_s467_th_{seed}.npz")
         else:
             delta_p = params[3,1] - params[2,1]
-            data_plus = np.load(f"{S809_DIR}/S809_stats_s467_th_fromshear_{seed}.npz")
-            data_minus = np.load(f"{S807_DIR}/S807_stats_s467_th_fromshear_{seed}.npz")
+            data_plus = np.load(f"{S809_DIR}/S809_stats_s467_th_{seed}.npz")
+            data_minus = np.load(f"{S807_DIR}/S807_stats_s467_th_{seed}.npz")
 
         kappa_deriv = (data_plus['kappa'] - data_minus['kappa']) / delta_p
         kappa_pos_deriv = (data_plus['kappa_pos_cum'] - data_minus['kappa_pos_cum']) / delta_p
@@ -171,7 +171,7 @@ y = kappa_pos_derivs_mean[0:n_bins_pos]
 y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[0:n_bins_pos, 0:n_bins_pos]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges, y, c='C0', ls='-', label=r'$\partial C^{\rm P}(\kappa) / \partial \Omega_{\rm m}$')
-ax.fill_between(bin_edges, y - y_err, y + y_err, color='C0', alpha=0.1)
+# ax.fill_between(bin_edges, y - y_err, y + y_err, color='C0', alpha=0.1)
 ax.fill_between(bin_edges, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
 
 # Sigma_8
@@ -179,7 +179,7 @@ y = kappa_pos_derivs_mean[n_bins_pos:2*n_bins_pos]
 y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[n_bins_pos:2*n_bins_pos, n_bins_pos:2*n_bins_pos]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges, y, c='C1', ls='-', label=r'$\partial C^{\rm P}(\kappa) / \partial \sigma_8$')
-ax.fill_between(bin_edges, y - y_err, y + y_err, color='C1', alpha=0.1)
+# ax.fill_between(bin_edges, y - y_err, y + y_err, color='C1', alpha=0.1)
 ax.fill_between(bin_edges, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
 
 ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
@@ -227,7 +227,7 @@ y = nn_pos_same2_derivs_mean[0:n]
 y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial C^{\rm PP}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
+# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
 ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
 y_prime = nn_neg_same2_derivs_mean[0:n]
 ax.plot(bin_edges2, y_prime, c='C0', ls='--', label=r'$\partial C^{\rm NN}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
@@ -236,7 +236,7 @@ y = nn_pos_same2_derivs_mean[n:2*n]
 y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial C^{\rm PP}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
+# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
 ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
 
 y_prime = nn_neg_same2_derivs_mean[n:2*n]
@@ -256,7 +256,7 @@ y = nn_pos_opp2_derivs_mean[0:n]
 y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial C^{\rm PN}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
+# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
 ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
 y_prime = nn_neg_opp2_derivs_mean[0:n]
 ax.plot(bin_edges2, y_prime, c='C0', ls='--', label=r'$\partial C^{\rm NP}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
@@ -266,7 +266,7 @@ y = nn_pos_opp2_derivs_mean[n:2*n]
 y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial C^{\rm PN}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
+# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
 ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
 y_prime = nn_neg_opp2_derivs_mean[n:2*n]
 ax.plot(bin_edges2, y_prime, c='C1', ls='--', label=r'$\partial C^{\rm NP}_{\rm 2NN}(\theta) / \partial \sigma_8$')
