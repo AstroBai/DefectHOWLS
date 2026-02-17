@@ -729,7 +729,7 @@ g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_p
             colors = [color_map(i) for i in range(4)] + ['red', 'black'],
             ls = ['solid', 'solid', 'solid', 'solid', 'solid', 'dashed'],
             lws=2)
-g.add_legend([r"$\kappa$-2PCF", r"PDF", r"Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"All HOWLS", r"$\text{All HOWLS} + \kappa\text{-2PCF}$"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"PDF", r"Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"Defects + PDF", r"$\text{Defects + PDF} + \kappa\text{-2PCF}$"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/combined.png", dpi=300)
           
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
