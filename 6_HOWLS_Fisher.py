@@ -860,7 +860,7 @@ sep_index = len(our_data) - 0.5
 ax.axhline(y=sep_index, color='black', linestyle='--', linewidth=1)
 
 # defects results shaded region
-ax.axvspan(-vals_om[2], vals_s8[2], color='gray', alpha=0.1)
+ax.axvspan(-vals_om[2], vals_s8[2], color='gray', alpha=0.3)
 
 ax.set_xlim(-max(vals_om)*1.4, max(vals_s8)*1.4)
 
