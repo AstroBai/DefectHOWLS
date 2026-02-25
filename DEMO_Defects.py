@@ -12,7 +12,7 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 # --- Configuration for Zoom ---
 N_pix_total = 1024
 FoV_total = 10.0 # degrees
-FoV_zoom = 2   # degrees
+FoV_zoom = 10   # degrees
 seed = 997
 
 # Calculate pixel limit for the zoom
@@ -24,7 +24,7 @@ print("Loading convergence data...")
 with fits.open(f"{SLICS_DIR}/kappa_noise_GalCatalog_LOS_cone{seed}.fits_s333{seed}_zmin0.0_zmax3.0_sys_3.fits_ks_nomask_shear.fits") as hdul:
     convergence_data = hdul[0].data[0]  # add noise
     # Apply Gaussian smoothing (sigma=8 pixels)
-    convergence_smoothed = gaussian_filter(convergence_data, sigma=8)
+    convergence_smoothed = gaussian_filter(convergence_data, sigma=32)
 
 # 2. Load DefectFinder Data (Shear & Defects)
 print("Loading defect data...")
@@ -284,7 +284,7 @@ y_deg_clean = np.linspace(0, FoV_zoom, limit_pix)
 X_clean, Y_clean = np.meshgrid(x_deg_clean, y_deg_clean)
 
 for data, cmap, out_path, add_quiver in minimal_panels:
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(16, 16))
     ax.imshow(data, origin='lower', cmap=cmap, extent=extent)
     if add_quiver:
         ax.quiver(X_clean[::step_clean, ::step_clean],
@@ -296,7 +296,7 @@ for data, cmap, out_path, add_quiver in minimal_panels:
                   headwidth=0, headlength=0, headaxislength=0, pivot='mid')
     ax.set_axis_off()
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.savefig(out_path, dpi=500, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
     print(f"Saved plot to {out_path}")
 

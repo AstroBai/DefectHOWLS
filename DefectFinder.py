@@ -20,6 +20,10 @@ class DefectFinder:
         self.gamm2 = data['gamm2']
         self.phi = data['shear_angles']
         self.shear_amp = np.sqrt(self.gamm1**2 + self.gamm2**2)
+        self.mask = np.ones(self.phi.shape, dtype=bool)
+        self.ra = self.angle_deg[0] 
+        self.dec = self.angle_deg[1]
+        self.pixel_scale_deg = 5 / 512
         
         # Determine if data is flat sky (2D) or Healpix (1D)
         if self.phi.ndim == 2:
@@ -379,48 +383,76 @@ class DefectFinder:
             hdu = fits.BinTableHDU.from_columns(cols)
             hdu.writeto(f"{savepath}_charge_{charge:+.1f}.fits", overwrite=True)
 
+    def _generate_masked_randoms(self, n_random):
+        """Generate random points properly sampled from the survey mask."""
+        # 1. Identify valid pixels for Randoms
+        # (We use the same mask as defect finding, or slightly eroded to be safe)
+        valid_y, valid_x = np.where(self.mask)
+        n_valid = len(valid_y)
+        
+        if n_valid == 0:
+            raise ValueError("Mask contains no valid pixels!")
+
+        # 2. Randomly select pixels
+        random_indices = np.random.choice(n_valid, size=n_random, replace=True)
+        rand_y_idxs = valid_y[random_indices]
+        rand_x_idxs = valid_x[random_indices]
+
+        # 3. Retrieve RA/DEC center
+        rand_ra = self.ra[rand_y_idxs, rand_x_idxs]
+        rand_dec = self.dec[rand_y_idxs, rand_x_idxs]
+
+        # 4. Add sub-pixel jitter
+        # Use pre-calculated rough pixel scale
+        d_scale = self.pixel_scale_deg
+        
+        jitter_ra = np.random.uniform(-0.5 * d_scale, 0.5 * d_scale, size=n_random)
+        jitter_dec = np.random.uniform(-0.5 * d_scale, 0.5 * d_scale, size=n_random)
+        
+        # RA correction for cos(dec)
+        rand_ra += jitter_ra / np.cos(np.radians(rand_dec))
+        rand_dec += jitter_dec
+
+        return rand_ra, rand_dec
+
     def correlation_function(self, charge1_path, charge2_path, min_sep=1., max_sep=100., n_bins=10):
-        """Compute the two-point correlation function of defects with given charges"""
+        """Compute the two-point correlation function using Masked Randoms."""
         cat1 = treecorr.Catalog(charge1_path,ra_col='RA',dec_col='DEC',ra_units='degrees',dec_units='degrees')
         cat2 = treecorr.Catalog(charge2_path,ra_col='RA',dec_col='DEC',ra_units='degrees',dec_units='degrees')
-        if charge1_path == charge2_path:
-            # create random catalog, numbers should be 100x larger than data catalog
-            #print("Computing auto-correlation")
-            n_random = cat1.nobj * 100
-            ra_random = np.random.uniform(0, 360, n_random)
-            dec_random = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random)))  # uniform in sin(dec)
-            cat_rand = treecorr.Catalog(ra=ra_random, dec=dec_random, ra_units='degrees', dec_units='degrees')
-            dd = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
-            rr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
-            dr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+        
+        is_auto = (charge1_path == charge2_path)
+        
+        # Number of randoms
+        multiplier = 50 
+        n_random = max(cat1.nobj * multiplier, 10000) # Ensure minimal count
+        
+        # Generate catalogs
+        ra_r, dec_r = self._generate_masked_randoms(n_random)
+        cat_rand = treecorr.Catalog(ra=ra_r, dec=dec_r, ra_units='degrees', dec_units='degrees')
+
+        # Setup treecorr
+        dd = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+        rr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+        dr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+
+        if is_auto:
             dd.process(cat1, cat1)
             rr.process(cat_rand, cat_rand)
             dr.process(cat1, cat_rand)
-            thetas = dd.meanr
             xi, varxi = dd.calculateXi(rr=rr, dr=dr)
-            # covmat = dd.cov
-            return thetas, xi
-        
         else:
-            # create random catalogs for both
-            #print("Computing cross-correlation")
-            n_random1 = cat1.nobj * 100
-            ra_random1 = np.random.uniform(0, 360, n_random1)
-            dec_random1 = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random1)))  # uniform in sin(dec)
-            cat_rand1 = treecorr.Catalog(ra=ra_random1, dec=dec_random1, ra_units='degrees', dec_units='degrees')
-            n_random2 = cat2.nobj * 100
-            ra_random2 = np.random.uniform(0, 360, n_random2)
-            dec_random2 = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_random2)))  # uniform in sin(dec)
-            cat_rand2 = treecorr.Catalog(ra=ra_random2, dec=dec_random2, ra_units='degrees', dec_units='degrees')
-            dd = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
-            rr = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
-            d1r2 = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
+            # For Cross, we strictly need two random catalogs or calculate R1R2 etc. 
+            # Ideally use Landy-Szalay generalized.
+            # Simplified here using same random distribution for both (since they come from same map)
+            
+            d1r2 = dr # Rename for clarity
             r1d2 = treecorr.NNCorrelation(min_sep=min_sep, max_sep=max_sep, nbins=n_bins, sep_units='arcmin', bin_type='Log')
-            dd.process(cat1, cat2)
-            rr.process(cat_rand1, cat_rand2)
-            d1r2.process(cat1, cat_rand2)
-            r1d2.process(cat2, cat_rand1)
-            thetas = dd.meanr
+            
+            dd.process(cat1, cat2) # D1D2
+            rr.process(cat_rand, cat_rand) # R1R2 (assuming R1 ~ R2 distribution)
+            d1r2.process(cat1, cat_rand) # D1R2
+            r1d2.process(cat2, cat_rand) # D2R1 aka R1D2
+            
             xi, varxi = dd.calculateXi(rr=rr, dr=d1r2, rd=r1d2)
-            # covmat = dd.cov
-            return thetas, xi
+
+        return dd.rnom, xi
