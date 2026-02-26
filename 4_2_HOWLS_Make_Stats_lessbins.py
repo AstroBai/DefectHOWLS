@@ -12,7 +12,7 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 
 N = 128
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.05, 0.05, 30)
+    bin_edges = np.linspace(-0.04, 0.04, 30)
     df = DefectFinder(f"{OM02_DIR}/angles_s467_th_{i}_LCDM_Om02_ks_nomask_shear.npz")
     df.load_defects(f"{OM02_DIR}/defects_s467_th_{i}_LCDM_Om02_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -37,10 +37,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.logspace(np.log10(1.2), np.log10(10), 30)
-    bin_edges2 = np.logspace(np.log10(1.2), np.log10(20), 30)
-    bin_edges4 = np.logspace(np.log10(1.2), np.log10(40), 30)
-    bin_edges8 = np.logspace(np.log10(1.2), np.log10(80), 30)
+    bin_edges1 = np.logspace(np.log10(1), np.log10(5), 30)
+    bin_edges2 = np.logspace(np.log10(2), np.log10(10), 30)
+    bin_edges4 = np.logspace(np.log10(4), np.log10(20), 30)
+    bin_edges8 = np.logspace(np.log10(8), np.log10(40), 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -62,16 +62,16 @@ for i in tqdm(range(N)):
     df.save_defects(fits_path)
     theta, pp = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, nn = df.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, pn = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
 
     df = DefectFinder(f"{OM02_DIR}/angles_{i}_LCDM_Om02_ks_nomask_shear.npz")
-    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=80, n_bins=20)
+    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
 
     np.savez(f"{OM02_DIR}/OM02_stats_s467_th_lessbins_{i}.npz",
                 kappa=kappa,
@@ -106,7 +106,7 @@ for i in tqdm(range(N)):
 
     
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.05, 0.05, 30)
+    bin_edges = np.linspace(-0.04, 0.04, 30)
     df = DefectFinder(f"{OM04_DIR}/angles_s467_th_{i}_LCDM_Om04_ks_nomask_shear.npz")
     df.load_defects(f"{OM04_DIR}/defects_s467_th_{i}_LCDM_Om04_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -131,10 +131,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.logspace(np.log10(1.2), np.log10(10), 30)
-    bin_edges2 = np.logspace(np.log10(1.2), np.log10(20), 30)
-    bin_edges4 = np.logspace(np.log10(1.2), np.log10(40), 30)
-    bin_edges8 = np.logspace(np.log10(1.2), np.log10(80), 30)
+    bin_edges1 = np.logspace(np.log10(1), np.log10(5), 30)
+    bin_edges2 = np.logspace(np.log10(2), np.log10(10), 30)
+    bin_edges4 = np.logspace(np.log10(4), np.log10(20), 30)
+    bin_edges8 = np.logspace(np.log10(8), np.log10(40), 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -156,17 +156,17 @@ for i in tqdm(range(N)):
     df.save_defects(fits_path)
     theta, pp = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, nn = df.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, pn = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     
 
     df = DefectFinder(f"{OM04_DIR}/angles_{i}_LCDM_Om04_ks_nomask_shear.npz")
-    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=80, n_bins=20)
+    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
 
     np.savez(f"{OM04_DIR}/OM04_stats_s467_th_lessbins_{i}.npz",
                 kappa=kappa,
@@ -200,7 +200,7 @@ for i in tqdm(range(N)):
                 bin_edges8=bin_edges8)
 
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.05, 0.05, 30)
+    bin_edges = np.linspace(-0.04, 0.04, 30)
     df = DefectFinder(f"{S807_DIR}/angles_s467_th_{i}_LCDM_s80707210_ks_nomask_shear.npz")
     df.load_defects(f"{S807_DIR}/defects_s467_th_{i}_LCDM_s80707210_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -225,10 +225,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.logspace(np.log10(1.2), np.log10(10), 30)
-    bin_edges2 = np.logspace(np.log10(1.2), np.log10(20), 30)
-    bin_edges4 = np.logspace(np.log10(1.2), np.log10(40), 30)
-    bin_edges8 = np.logspace(np.log10(1.2), np.log10(80), 30)
+    bin_edges1 = np.logspace(np.log10(1), np.log10(5), 30)
+    bin_edges2 = np.logspace(np.log10(2), np.log10(10), 30)
+    bin_edges4 = np.logspace(np.log10(4), np.log10(20), 30)
+    bin_edges8 = np.logspace(np.log10(8), np.log10(40), 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -250,16 +250,16 @@ for i in tqdm(range(N)):
     df.save_defects(fits_path)
     theta, pp = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, nn = df.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, pn = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
 
     df = DefectFinder(f"{S807_DIR}/angles_{i}_LCDM_s80707210_ks_nomask_shear.npz")
-    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=80, n_bins=20)
+    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
 
     np.savez(f"{S807_DIR}/S807_stats_s467_th_lessbins_{i}.npz",
                 kappa=kappa,
@@ -293,7 +293,7 @@ for i in tqdm(range(N)):
                 bin_edges8=bin_edges8)
 
 for i in tqdm(range(N)):
-    bin_edges = np.linspace(-0.05, 0.05, 30)
+    bin_edges = np.linspace(-0.04, 0.04, 30)
     df = DefectFinder(f"{S809_DIR}/angles_s467_th_{i}_LCDM_s80976624_ks_nomask_shear.npz")
     df.load_defects(f"{S809_DIR}/defects_s467_th_{i}_LCDM_s80976624_ks_nomask_shear.npz")
     kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -318,10 +318,10 @@ for i in tqdm(range(N)):
     nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
     nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
     nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-    bin_edges1 = np.logspace(np.log10(1.2), np.log10(10), 30)
-    bin_edges2 = np.logspace(np.log10(1.2), np.log10(20), 30)
-    bin_edges4 = np.logspace(np.log10(1.2), np.log10(40), 30)
-    bin_edges8 = np.logspace(np.log10(1.2), np.log10(80), 30)
+    bin_edges1 = np.logspace(np.log10(1), np.log10(5), 30)
+    bin_edges2 = np.logspace(np.log10(2), np.log10(10), 30)
+    bin_edges4 = np.logspace(np.log10(4), np.log10(20), 30)
+    bin_edges8 = np.logspace(np.log10(8), np.log10(40), 30)
     nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2   
     nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
     nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -343,16 +343,16 @@ for i in tqdm(range(N)):
     df.save_defects(fits_path)
     theta, pp = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, nn = df.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                        min_sep=0.59, max_sep=40, n_bins=20)
     theta, pn = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                        min_sep=0.59, max_sep=80, n_bins=20) 
+                                        min_sep=0.59, max_sep=40, n_bins=20) 
 
     df = DefectFinder(f"{S809_DIR}/angles_{i}_LCDM_s80976624_ks_nomask_shear.npz")
-    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=80, n_bins=20)
+    theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
 
     np.savez(f"{S809_DIR}/S809_stats_s467_th_lessbins_{i}.npz",
                 kappa=kappa,
@@ -390,7 +390,7 @@ for i in tqdm(range(N)):
     try:
         # split into 4 sub-fields of 512x512 pixels each
         for subfield in range(4):
-            bin_edges = np.linspace(-0.05, 0.05, 30)
+            bin_edges = np.linspace(-0.04, 0.04, 30)
             df_subfield = DefectFinder(f"{SLICS_DIR}/angles_s467_th_{i}_subfield{subfield}_LCDM_SLICS_ks_nomask_shear.npz")
             df_subfield.load_defects(f"{SLICS_DIR}/defects_s467_th_{i}_subfield{subfield}_LCDM_SLICS_ks_nomask_shear.npz")
             kappa_subfield, _ = np.histogram(df_subfield.kappa, bins=bin_edges, density=True)
@@ -414,10 +414,10 @@ for i in tqdm(range(N)):
             nn_neg_same8 = df_subfield.nearest_distance(charge=-0.5, k=8)
             nn_pos_opp8 = df_subfield.nearest_opposite_distance(charge=0.5, k=8)
             nn_neg_opp8 = df_subfield.nearest_opposite_distance(charge=-0.5, k=8)
-            bin_edges1 = np.logspace(np.log10(1.2), np.log10(10), 30)
-            bin_edges2 = np.logspace(np.log10(1.2), np.log10(20), 30)
-            bin_edges4 = np.logspace(np.log10(1.2), np.log10(40), 30)
-            bin_edges8 = np.logspace(np.log10(1.2), np.log10(80), 30)
+            bin_edges1 = np.logspace(np.log10(1), np.log10(5), 30)
+            bin_edges2 = np.logspace(np.log10(2), np.log10(10), 30)
+            bin_edges4 = np.logspace(np.log10(4), np.log10(20), 30)
+            bin_edges8 = np.logspace(np.log10(8), np.log10(40), 30)
             nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2   
             nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
             nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 25 * (180/np.pi)**2 
@@ -439,16 +439,16 @@ for i in tqdm(range(N)):
             df_subfield.save_defects(fits_path)
             theta, pp = df_subfield.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                                         charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                                        min_sep=0.59, max_sep=40, n_bins=20)
             theta, nn = df_subfield.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                                        min_sep=0.59, max_sep=40, n_bins=20)
             theta, pn = df_subfield.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                                         charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                                        min_sep=0.59, max_sep=80, n_bins=20)
+                                                        min_sep=0.59, max_sep=40, n_bins=20)
 
             df_subfield = DefectFinder(f"{SLICS_DIR}/angles_{i}_subfield{subfield}_LCDM_SLICS_ks_nomask_shear.npz")
-            theta, kk = df_subfield.convergence_correlation(min_sep=0.59, max_sep=80, n_bins=20)
+            theta, kk = df_subfield.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
             np.savez(f"{SLICS_DIR}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz",
                         kappa=kappa_subfield,
                         kappa_pos_cum=kappa_pos_cum_subfield,

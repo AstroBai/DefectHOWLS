@@ -8,7 +8,7 @@ cd /home/jbai/DefectHOWLS
 # python 1_HOWLS_Angle_Map.py
 # python 2_HOWLS_Defect_Catalog.py
 # python 3_HOWLS_Test_Stats.py
-python -u 4_2_HOWLS_Make_Stats_lessbins.py
+python -u 4_3_HOWLS_Make_Stats_morebins.py
 python -u 5_HOWLS_Make_Covs.py
 python -u 6_HOWLS_Fisher.py
 python -u 7_HOWLS_Plot_Derivs.py
