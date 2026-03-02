@@ -24,6 +24,11 @@ class DefectFinder:
         self.ra = self.angle_deg[0] 
         self.dec = self.angle_deg[1]
         self.pixel_scale_deg = 5 / 512
+        self.mask_exclude_width = 8 * self.pixel_scale_deg
+        self.mask_boundary = (self.ra > self.mask_exclude_width) & (self.ra < 180 - self.mask_exclude_width) & \
+                    (self.dec > self.mask_exclude_width) & (self.dec < 180 - self.mask_exclude_width)
+        self.kappa_remove_boundary = self.kappa.copy()
+        self.kappa_remove_boundary[~self.mask_boundary] = np.nan
         
         # Determine if data is flat sky (2D) or Healpix (1D)
         if self.phi.ndim == 2:

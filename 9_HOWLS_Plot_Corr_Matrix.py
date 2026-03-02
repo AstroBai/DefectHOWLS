@@ -53,7 +53,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_morebins_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -398,7 +398,7 @@ if __name__ == "__main__":
     print("Loading data...")
     # Load Main Data
     try:
-        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_subfields.npz"))
+        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_lessbins_subfields.npz"))
     except FileNotFoundError:
         print(f"Could not find data file at {SLICS_DIR}")
         exit(1)

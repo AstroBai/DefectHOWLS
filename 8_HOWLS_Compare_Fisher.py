@@ -60,7 +60,7 @@ plt.close()
 
 # compare with Euclid HOWLS results
 params_fid = np.array([0.3134, 0.842])
-fisher_pdf_s467_th = np.load('outfiles/pdf_fisher_s467_th_morebins_KL0.1.npy')
+fisher_pdf_s467_th = np.load('outfiles/pdf_fisher_s467_th_lessbins_KL0.1.npy')
 
 
 inv_fisher_pdf_ours = np.linalg.inv(fisher_pdf_s467_th) 

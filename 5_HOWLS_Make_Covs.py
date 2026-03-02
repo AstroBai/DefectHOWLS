@@ -40,7 +40,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{OM02_DIR}/OM02_stats_s467_th_morebins_{i}.npz")
+    data = np.load(f"{OM02_DIR}/OM02_stats_s467_th_lessbins_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -215,7 +215,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             kk_list]), rowvar=False)
 
 
-np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_morebins.npz",
+np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_lessbins.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -320,7 +320,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{OM04_DIR}/OM04_stats_s467_th_morebins_{i}.npz")
+    data = np.load(f"{OM04_DIR}/OM04_stats_s467_th_lessbins_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -496,7 +496,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             kk_list]), rowvar=False)
 
 
-np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_morebins.npz",
+np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_lessbins.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -601,7 +601,7 @@ nn_list = []
 pn_list = []
 
 for i in tqdm(range(N)):
-    data = np.load(f"{S807_DIR}/S807_stats_s467_th_morebins_{i}.npz")
+    data = np.load(f"{S807_DIR}/S807_stats_s467_th_lessbins_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -775,7 +775,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
                             kk_list]), rowvar=False)
 
-np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467_th_morebins.npz",
+np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467_th_lessbins.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -880,7 +880,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{S809_DIR}/S809_stats_s467_th_morebins_{i}.npz")
+    data = np.load(f"{S809_DIR}/S809_stats_s467_th_lessbins_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -1053,7 +1053,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
                             kk_list]), rowvar=False)
-np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_morebins.npz",
+np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_lessbins.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -1159,7 +1159,7 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_morebins.npz",
 
 # for i in tqdm(range(N)):
 #     try:
-#         data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_morebins_{i}.npz")
+#         data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_lessbins_{i}.npz")
 #         bin_edges = data['bin_edges']
 #         bin_edges1 = data['bin_edges1']
 #         bin_edges2 = data['bin_edges2']
@@ -1337,7 +1337,7 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_morebins.npz",
 
 
 
-# np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins.npz",
+# np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_lessbins.npz",
 #          bin_edges=bin_edges,
 #          bin_edges1=bin_edges1,
 #          bin_edges2=bin_edges2,
@@ -1445,7 +1445,7 @@ N=1101
 for i in tqdm(range(N)):
     try:
         for subfield in range(4):
-            with np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_morebins_{i}_subfield{subfield}.npz") as data:
+            with np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz") as data:
                 bin_edges = data['bin_edges']
                 bin_edges1 = data['bin_edges1']
                 bin_edges2 = data['bin_edges2']
@@ -1622,7 +1622,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
 
 
 
-np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_subfields.npz",
+np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_lessbins_subfields.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,

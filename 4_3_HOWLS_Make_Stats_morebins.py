@@ -15,7 +15,7 @@ for i in tqdm(range(N)):
     bin_edges = np.linspace(-0.04, 0.04, 100)
     df = DefectFinder(f"{OM02_DIR}/angles_s467_th_{i}_LCDM_Om02_ks_nomask_shear.npz")
     df.load_defects(f"{OM02_DIR}/defects_s467_th_{i}_LCDM_Om02_ks_nomask_shear.npz")
-    kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
+    kappa, _ = np.histogram(df.kappa_remove_boundary, bins=bin_edges, density=True)
     kappa_pos = df.convergence_dist(charge=0.5)
     kappa_pos_cum = np.array([np.sum(kappa_pos < b) for b in bin_edges]) / 25 * (180/np.pi)**2 
     kappa_neg = df.convergence_dist(charge=-0.5)
@@ -109,7 +109,7 @@ for i in tqdm(range(N)):
     bin_edges = np.linspace(-0.04, 0.04, 100)
     df = DefectFinder(f"{OM04_DIR}/angles_s467_th_{i}_LCDM_Om04_ks_nomask_shear.npz")
     df.load_defects(f"{OM04_DIR}/defects_s467_th_{i}_LCDM_Om04_ks_nomask_shear.npz")
-    kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
+    kappa, _ = np.histogram(df.kappa_remove_boundary, bins=bin_edges, density=True)
     kappa_pos = df.convergence_dist(charge=0.5)
     kappa_pos_cum = np.array([np.sum(kappa_pos < b) for b in bin_edges]) / 25 * (180/np.pi)**2 
     kappa_neg = df.convergence_dist(charge=-0.5)
@@ -203,7 +203,7 @@ for i in tqdm(range(N)):
     bin_edges = np.linspace(-0.04, 0.04, 100)
     df = DefectFinder(f"{S807_DIR}/angles_s467_th_{i}_LCDM_s80707210_ks_nomask_shear.npz")
     df.load_defects(f"{S807_DIR}/defects_s467_th_{i}_LCDM_s80707210_ks_nomask_shear.npz")
-    kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
+    kappa, _ = np.histogram(df.kappa_remove_boundary, bins=bin_edges, density=True)
     kappa_pos = df.convergence_dist(charge=0.5)
     kappa_pos_cum = np.array([np.sum(kappa_pos < b) for b in bin_edges]) / 25 * (180/np.pi)**2 
     kappa_neg = df.convergence_dist(charge=-0.5)
@@ -296,7 +296,7 @@ for i in tqdm(range(N)):
     bin_edges = np.linspace(-0.04, 0.04, 100)
     df = DefectFinder(f"{S809_DIR}/angles_s467_th_{i}_LCDM_s80976624_ks_nomask_shear.npz")
     df.load_defects(f"{S809_DIR}/defects_s467_th_{i}_LCDM_s80976624_ks_nomask_shear.npz")
-    kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
+    kappa, _ = np.histogram(df.kappa_remove_boundary, bins=bin_edges, density=True)
     kappa_pos = df.convergence_dist(charge=0.5)
     kappa_pos_cum = np.array([np.sum(kappa_pos < b) for b in bin_edges]) / 25 * (180/np.pi)**2 
     kappa_neg = df.convergence_dist(charge=-0.5)
@@ -393,7 +393,7 @@ for i in tqdm(range(N)):
             bin_edges = np.linspace(-0.04, 0.04, 100)
             df_subfield = DefectFinder(f"{SLICS_DIR}/angles_s467_th_{i}_subfield{subfield}_LCDM_SLICS_ks_nomask_shear.npz")
             df_subfield.load_defects(f"{SLICS_DIR}/defects_s467_th_{i}_subfield{subfield}_LCDM_SLICS_ks_nomask_shear.npz")
-            kappa_subfield, _ = np.histogram(df_subfield.kappa, bins=bin_edges, density=True)
+            kappa_subfield, _ = np.histogram(df_subfield.kappa_remove_boundary, bins=bin_edges, density=True)
             kappa_pos_subfield = df_subfield.convergence_dist(charge=0.5)
             kappa_pos_cum_subfield = np.array([np.sum(kappa_pos_subfield < b) for b in bin_edges]) / 25 * (180/np.pi)**2 
             kappa_neg_subfield = df_subfield.convergence_dist(charge=-0.5)
