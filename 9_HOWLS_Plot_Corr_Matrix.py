@@ -4,7 +4,7 @@ import seaborn as sns
 import os
 from tqdm import tqdm
 from scipy.stats import norm, gaussian_kde
-from matplotlib.colors import SymLogNorm
+from matplotlib.colors import SymLogNorm, ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 DATA_DIR = "/cephfs/jbai/HOWLS_Data"
@@ -53,7 +53,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_morebins_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -115,16 +115,6 @@ def get_kept_mask(name, fid_vec, cov, samples=None, sigma_thresh=2.0):
                  # We need to ensure we are accessing the right column
                  if i < samples.shape[1]:
                     kl_values[i] = calculate_kl(samples[:, i])
-        
-        kl_mask = (kl_values <= 0.4) # Threshold from Fisher script was 0.1, checking context... 
-        # Wait, usually it is 0.1 or 0.4 depending on user preference. 
-        # In 6_HOWLS_Fisher.py it was 0.1 in the code provided in history.
-        # "mask = mask & (kl_values <= 0.1)"
-        # But wait, looking at user request history, they didn't specify threshold.
-        # I should probably stick to 0.4 if I recall correctly from other HOWLS papers or 0.1.
-        # Let's check 6_HOWLS_Fisher.py content from previous turns.
-        # Found: "mask = mask & (kl_values <= 0.1)" in 6_HOWLS_Fisher.py.
-        # Using 0.1 to be consistent.
         
         mask = mask & (kl_values <= 0.1)
         
@@ -192,6 +182,13 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
     # cbar=False because we will add it manually to ensure height match
     sns.heatmap(corr, ax=ax, cmap='coolwarm', vmin=-1, vmax=1, center=0,
                 square=True, cbar=False, xticklabels=False, yticklabels=False)
+
+    # Highlight zero covariance points
+    zero_mask = np.abs(cov) < 1e-10
+    if np.any(zero_mask):
+        sns.heatmap(np.zeros_like(corr), ax=ax, mask=~zero_mask, cbar=False,
+                    cmap=ListedColormap(['#d9d9d9']), vmin=-1, vmax=1,
+                    xticklabels=False, yticklabels=False, square=True)
 
     # Add black border to the heatmap
     for _, spine in ax.spines.items():
@@ -398,7 +395,7 @@ if __name__ == "__main__":
     print("Loading data...")
     # Load Main Data
     try:
-        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_lessbins_subfields.npz"))
+        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_subfields.npz"))
     except FileNotFoundError:
         print(f"Could not find data file at {SLICS_DIR}")
         exit(1)

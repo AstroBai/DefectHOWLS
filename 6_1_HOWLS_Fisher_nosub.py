@@ -26,10 +26,10 @@ def calculate_kl(data_vec):
 def get_bin_coords(name):
     # Bin definitions provided by user
     bin_edges_kappa = np.linspace(-0.05, 0.05, 100)
-    bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 100)
-    bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 100)
-    bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 100)
-    bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 20)
+    bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 20)
+    bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 20)
+    bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 20)
     
     if name == "kappa":
         centers = (bin_edges_kappa[:-1] + bin_edges_kappa[1:]) / 2
@@ -52,7 +52,7 @@ def get_bin_coords(name):
             return data_slics['theta']
         except:
              # Fallback if global not ready (though it should be called after load)
-             return np.logspace(np.log10(0.59), np.log10(100), 100)
+             return np.logspace(np.log10(0.59), np.log10(100), 20)
              
     return None
 
@@ -212,7 +212,7 @@ def filter_data_block(name, fid_vec, deriv, cov, n_realizations, samples=None, s
                  kl_values[i] = calculate_kl(samples[:, i])
         
         original_count = mask.sum()
-        mask = mask & (kl_values <= 0.05)
+        mask = mask & (kl_values <= 0.2)
         kl_removed_count = original_count - mask.sum()
         if kl_removed_count > 0:
             print(f"{name}: removed {kl_removed_count} bins due to KL > 0.1")
@@ -344,11 +344,11 @@ class FisherDataBlock:
 def create_block(name, key_mean, key_deriv, key_cov, key_samples):
     return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_morebins.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_morebins.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th_morebins.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th_morebins.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_nosub.npz")
 
 slics_samples = load_slics_samples(SLICS_DIR)
 
@@ -830,4 +830,6 @@ plt.close()
 # save fisher matrix for defects
 np.save("outfiles/defects_fisher_s467_th_nosub.npy", fisher_mats['all'])
 # save pdf results
-np.save("outfiles/pdf_fisher_s467_th_KL0.05_nosub.npy", fisher_mats['kappa'])
+np.save("outfiles/pdf_fisher_s467_th_KL0.2_nosub.npy", fisher_mats['kappa'])
+# save kappa 2pcf results
+np.save("outfiles/kk_fisher_s467_th_KL0.2_nosub.npy", fisher_mats['kk'])

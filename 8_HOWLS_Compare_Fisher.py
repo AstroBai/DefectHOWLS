@@ -110,3 +110,43 @@ plt.close()
 print("Defects 1-sigma:", np.sqrt(np.diag(covmat_defects)) / params_fid)
 print("PDF 1-sigma:", np.sqrt(np.diag(covmat_pdf)) / params_fid)
 print("Euclid PDF 1-sigma:", np.sqrt(np.diag(covmat_pdf_euclid)) / params_fid)
+
+
+# defect_lessbins vs more bins
+defect_lessbins = np.load('outfiles/defects_fisher_s467_th_lessbins.npy')
+defect_morebins = np.load('outfiles/defects_fisher_s467_th_morebins.npy')
+
+covmat_defect_lessbins = np.linalg.inv(defect_lessbins)
+covmat_defect_morebins = np.linalg.inv(defect_morebins)
+
+# don't add S8
+params_fid_lessbins = np.array([0.3134, 0.842])
+params_fid_morebins = np.array([0.3134, 0.842])
+
+defect_lessbins_samples = GaussianND(mean=params_fid_lessbins, cov=covmat_defect_lessbins, names=names[:2], labels=labels[:2])
+defect_morebins_samples = GaussianND(mean=params_fid_morebins, cov=covmat_defect_morebins, names=names[:2], labels=labels[:2])  
+g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=1)
+g.settings.num_plot_contours = 1
+g.settings.linewidth_contour = 1.5
+g.settings.linewidth = 1.5
+g.triangle_plot([defect_lessbins_samples, defect_morebins_samples],
+                filled=False, contour_colors=[color_map(0), color_map(1)], contour_ls=['-', '-'], contour_lw=2, legend_labels=['Defects (less bins)', 'Defects (more bins)'], legend_loc='upper right', fontsize=7)
+plt.savefig('outfiles/Defects_Compare_Bins.png', dpi=300)
+plt.close()
+
+
+# compare pdf with more bins vs less bins
+pdf_lessbins = np.load('outfiles/pdf_fisher_s467_th_lessbins_KL0.1.npy')
+pdf_morebins = np.load('outfiles/pdf_fisher_s467_th_morebins_KL0.1.npy')
+covmat_pdf_lessbins = np.linalg.inv(pdf_lessbins)
+covmat_pdf_morebins = np.linalg.inv(pdf_morebins)
+pdf_lessbins_samples = GaussianND(mean=params_fid_lessbins, cov=covmat_pdf_lessbins, names=names[:2], labels=labels[:2])
+pdf_morebins_samples = GaussianND(mean=params_fid_morebins, cov=covmat_pdf_morebins, names=names[:2], labels=labels[:2])
+g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=1)
+g.settings.num_plot_contours = 1
+g.settings.linewidth_contour = 1.5
+g.settings.linewidth = 1.5
+g.triangle_plot([pdf_lessbins_samples, pdf_morebins_samples],
+                filled=False, contour_colors=[color_map(0), color_map(1)], contour_ls=['-', '-'], contour_lw=2, legend_labels=['PDF (less bins)', 'PDF (more bins)'], legend_loc='upper right', fontsize=7)
+plt.savefig('outfiles/PDF_Compare_Bins.png', dpi=300)
+plt.close()
