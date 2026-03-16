@@ -53,7 +53,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_morebins_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -166,6 +166,26 @@ def get_kept_mask(name, fid_vec, cov, samples=None, sigma_thresh=2.0):
 
     return mask
 
+def get_kept_mask_for_target(key, data_slics, slics_samples, area_scaling, sigma_thresh=2.0):
+    """
+    Always filter in the target data-vector space directly.
+    For combined targets, this enforces combine-first then filter.
+    """
+    mean_key = f"{key}_mean"
+    cov_key = f"{key}_cov"
+
+    if mean_key not in data_slics or cov_key not in data_slics:
+        return None
+
+    mean_vec = data_slics[mean_key]
+    cov_vec = data_slics[cov_key] * area_scaling
+    samples = slics_samples.get(key)
+
+    if samples is None:
+        print(f"Warning: Samples for {key} not found. Skipping KL filter.")
+
+    return get_kept_mask(key, mean_vec, cov_vec, samples=samples, sigma_thresh=sigma_thresh)
+
 def get_component_structure(name):
     return []
 
@@ -174,7 +194,6 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
     sigma = np.sqrt(np.diag(cov))
     sigma[sigma == 0] = 1.0
     corr = cov / np.outer(sigma, sigma)
-    
     plt.figure(figsize=(6, 6))
     ax = plt.gca()
     
@@ -184,10 +203,10 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
                 square=True, cbar=False, xticklabels=False, yticklabels=False)
 
     # Highlight zero covariance points
-    zero_mask = np.abs(cov) < 1e-10
+    zero_mask = np.abs(cov) < 1e-20
     if np.any(zero_mask):
         sns.heatmap(np.zeros_like(corr), ax=ax, mask=~zero_mask, cbar=False,
-                    cmap=ListedColormap(['#d9d9d9']), vmin=-1, vmax=1,
+                    cmap=ListedColormap(["#919191"]), vmin=-1, vmax=1,
                     xticklabels=False, yticklabels=False, square=True)
 
     # Add black border to the heatmap
@@ -307,7 +326,7 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
         
         leaves = [
             ('D-CDF', len_dcdf),
-            ('kNN', len_knn),
+            ('kNN-CDF', len_knn),
             ('PDF', len_pdf),
             (r'$\kappa$-2PCF', len_kk)
         ]
@@ -391,11 +410,21 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
     plt.close()
     print(f"Saved {filename}")
 
+    print("Stability check condition number after filtering:", np.linalg.cond(cov[mask][:, mask]))
+    # stability check by computing I - invCov @ cov for the kept bins
+    if mask.sum() > 0:
+        inv_cov = np.linalg.inv(cov[mask][:, mask])
+        stability_check = np.eye(mask.sum()) - inv_cov @ cov[mask][:, mask]
+        print("Stability check (should be close to zero matrix):")
+        print(stability_check)
+        print("Max absolute value in stability check matrix:", np.abs(stability_check).max())
+        print("norm of stability check matrix:", np.linalg.norm(stability_check))
+
 if __name__ == "__main__":
     print("Loading data...")
     # Load Main Data
     try:
-        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_subfields.npz"))
+        data_slics = dict(np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz"))
     except FileNotFoundError:
         print(f"Could not find data file at {SLICS_DIR}")
         exit(1)
@@ -431,10 +460,23 @@ if __name__ == "__main__":
                                              slics_samples['nn_4'], slics_samples['nn_8']])
     if 'all' not in slics_samples:
         slics_samples['all'] = np.hstack([slics_samples['kappa_all'], slics_samples['nn_all']])
+    if 'all_and_pdf' not in slics_samples:
+        slics_samples['all_and_pdf'] = np.hstack([slics_samples['all'], slics_samples['kappa']])
+    if 'all_and_kk' not in slics_samples:
+        slics_samples['all_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kk']])
     if 'all_howls_and_kk' not in slics_samples:
         slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kappa'], slics_samples['kk']])
+    if 'dcorr' not in slics_samples:
+        slics_samples['dcorr'] = np.hstack([slics_samples['pp'], slics_samples['nn'], slics_samples['pn']])
     
     targets = [
+        'kappa',
+        'kappa_all',
+        'nn_all',
+        'all',
+        'all_and_pdf',
+        'all_and_kk',
+        'dcorr',
         'all_howls_and_kk'
     ]
     
@@ -444,23 +486,16 @@ if __name__ == "__main__":
         print(f"Processing {key}...")
         mean_key = f"{key}_mean"
         cov_key = f"{key}_cov"
-        
-        mean_vec = None
-        cov_vec = None
 
-        if mean_key in data_slics and cov_key in data_slics:
-            mean_vec = data_slics[mean_key]
-            cov_vec = data_slics[cov_key] * area_scaling
-        else:
-            # Need to construct it if it's missing (some composites might not be pre-calculated)
-            # Actually File 6 suggests they are pre-calculated in data_slics for all combinations used in Fisher.
+        if mean_key not in data_slics or cov_key not in data_slics:
             print(f"Skipping {key} (not found in data)")
             continue
-            
-        samples = slics_samples.get(key)
-        if samples is None:
-             print(f"Warning: Samples for {key} not found. Skipping KL filter.")
-        
-        mask = get_kept_mask(key, mean_vec, cov_vec, samples=samples)
-        
+
+        cov_vec = data_slics[cov_key] * area_scaling
+        mask = get_kept_mask_for_target(key, data_slics, slics_samples, area_scaling)
+
+        if mask is None:
+            print(f"Skipping {key} (mask unavailable)")
+            continue
+
         plot_corr_matrix(key, cov_vec, mask, f"{OUT_DIR}/{key}_corr.png", data_slics, area_scaling)

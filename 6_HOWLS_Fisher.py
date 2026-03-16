@@ -155,7 +155,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -320,36 +320,46 @@ class FisherDataBlock:
         return self
 
     @classmethod
-    def combine(cls, name, components, combined_deriv, combined_cov, n_realizations, samples=None):
-        # Combine masks from components
-        full_mask = np.hstack([c.mask for c in components])
-        
-        # Apply combined mask
-        cov_final = combined_cov[np.ix_(full_mask, full_mask)]
-        hartlap = (n_realizations - full_mask.sum() - 2) / (n_realizations - 1)
-        
-        try:
-             inv_cov = np.linalg.inv(cov_final) * hartlap
-        except np.linalg.LinAlgError:
-             print(f"ERROR: {name}: Singular matrix in combine. Using pseudo-inverse.")
-             inv_cov = np.linalg.pinv(cov_final) * hartlap
-             
-        deriv_final = combined_deriv[:, full_mask]
-        
+    def combine(cls, name, components, combined_deriv, combined_cov, n_realizations, fid_vec=None, samples=None, sigma_thresh=2.0):
+        if fid_vec is None:
+            if samples is not None and len(samples) > 0:
+                fid_vec = np.mean(samples, axis=0)
+            else:
+                raise ValueError(f"{name}: fid_vec is required for combined filtering.")
+
+        deriv_final, cov_final, inv_cov, full_mask = filter_data_block(
+            name,
+            fid_vec,
+            combined_deriv,
+            combined_cov,
+            n_realizations,
+            samples=samples,
+            sigma_thresh=sigma_thresh,
+        )
+
         print(f"{name}: Combined mask kept {full_mask.sum()} / {len(full_mask)} bins")
-        
-        return cls(name, combined_deriv, combined_cov, n_realizations, 
-                   samples=samples, mask=full_mask, inv_cov=inv_cov, 
-                   final_cov=cov_final, final_deriv=deriv_final)
+
+        return cls(
+            name,
+            combined_deriv,
+            combined_cov,
+            n_realizations,
+            fid_vec=fid_vec,
+            samples=samples,
+            mask=full_mask,
+            inv_cov=inv_cov,
+            final_cov=cov_final,
+            final_deriv=deriv_final,
+        )
 
 def create_block(name, key_mean, key_deriv, key_cov, key_samples):
     return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_lessbins.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_lessbins.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th_lessbins.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th_lessbins.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_lessbins_subfields.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz")
 
 slics_samples = load_slics_samples(SLICS_DIR)
 
@@ -574,7 +584,9 @@ for key, block in nn_blocks.items():
 # 2. Combine Blocks
 # Kappa All: [pos, neg]
 kappa_all_block = FisherDataBlock.combine("kappa_all", [kappa_pos_block, kappa_neg_block], 
-                                          kappa_all_deriv, kappa_all_cov, n, slics_samples.get("kappa_all"))
+                                          kappa_all_deriv, kappa_all_cov, n,
+                                          fid_vec=data_slics["kappa_all_mean"],
+                                          samples=slics_samples.get("kappa_all"))
 kappa_all_inv_cov = kappa_all_block.inv_cov
 kappa_all_deriv = kappa_all_block.final_deriv # Update global variable
 
@@ -611,13 +623,17 @@ all_inv_cov = all_block.inv_cov
 all_deriv = all_block.final_deriv
 
 # All and KK: [all, kk]
-all_and_kk_block = FisherDataBlock.combine("all_and_kk", [all_block, kk_block], all_and_kk_deriv, all_and_kk_cov, n, slics_samples.get("all_and_kk"))
+all_and_kk_block = FisherDataBlock.combine("all_and_kk", [all_block, kk_block], all_and_kk_deriv, all_and_kk_cov, n,
+                                           fid_vec=data_slics["all_and_kk_mean"],
+                                           samples=slics_samples.get("all_and_kk"))
 all_and_kk_inv_cov = all_and_kk_block.inv_cov
 all_and_kk_deriv = all_and_kk_block.final_deriv
 
 # All and PDF: [all, kappa] (Wait, check construction: slices_samples['all_and_pdf'] = [all, kappa])
 # kappa_block is the one for "kappa" (unsplit)
-all_and_pdf_block = FisherDataBlock.combine("all_and_pdf", [all_block, kappa_block], all_and_pdf_deriv, all_and_pdf_cov, n, slics_samples.get("all_and_pdf"))
+all_and_pdf_block = FisherDataBlock.combine("all_and_pdf", [all_block, kappa_block], all_and_pdf_deriv, all_and_pdf_cov, n,
+                                            fid_vec=data_slics["all_and_pdf_mean"],
+                                            samples=slics_samples.get("all_and_pdf"))
 all_and_pdf_inv_cov = all_and_pdf_block.inv_cov
 all_and_pdf_deriv = all_and_pdf_block.final_deriv
 
@@ -625,11 +641,15 @@ all_and_pdf_deriv = all_and_pdf_block.final_deriv
 # Construction: slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kappa'], slics_samples['kk']])
 # Equivalent to [all_and_pdf_block, kk_block]
 all_howls_and_kk_block = FisherDataBlock.combine("all_howls_and_kk", [all_and_pdf_block, kk_block], 
-                                                 all_howls_and_kk_deriv, all_howls_and_kk_cov, n, slics_samples.get("all_howls_and_kk"))
+                                                 all_howls_and_kk_deriv, all_howls_and_kk_cov, n,
+                                                 fid_vec=data_slics["all_howls_and_kk_mean"],
+                                                 samples=slics_samples.get("all_howls_and_kk"))
 all_howls_and_kk_inv_cov = all_howls_and_kk_block.inv_cov
 all_howls_and_kk_deriv = all_howls_and_kk_block.final_deriv
 
-dcorr_block = FisherDataBlock.combine("dcorr", [pp_block, nn_block, pn_block], dcorr_deriv, dcorr_cov, n, slics_samples.get("dcorr"))
+dcorr_block = FisherDataBlock.combine("dcorr", [pp_block, nn_block, pn_block], dcorr_deriv, dcorr_cov, n,
+                                      fid_vec=data_slics["dcorr_mean"],
+                                      samples=slics_samples.get("dcorr"))
 dcorr_inv_cov = dcorr_block.inv_cov
 dcorr_deriv = dcorr_block.final_deriv
 
@@ -886,6 +906,6 @@ plt.savefig("outfiles/1sigma_bars.png", dpi=300)
 plt.close()
 
 # save fisher matrix for defects
-np.save("outfiles/defects_fisher_s467_th_lessbins.npy", fisher_mats['all'])
+np.save("outfiles/defects_fisher_s467_th.npy", fisher_mats['all'])
 # save pdf results
-np.save("outfiles/pdf_fisher_s467_th_lessbins_KL0.1.npy", fisher_mats['kappa'])
+np.save("outfiles/pdf_fisher_s467_th_KL0.1.npy", fisher_mats['kappa'])
