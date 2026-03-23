@@ -4,6 +4,8 @@ import os
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde, norm
 
+kk_theta_for_plots = None
+
 def calculate_kl(data_vec):
     """Calculates KL(P || Q) where P is data, Q is Gaussian approximation."""
     mu, std = np.mean(data_vec), np.std(data_vec)
@@ -26,10 +28,10 @@ def calculate_kl(data_vec):
 def get_bin_coords(name):
     # Bin definitions provided by user
     bin_edges_kappa = np.linspace(-0.05, 0.05, 100)
-    bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 20)
-    bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 20)
-    bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 20)
-    bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 20)
+    bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 100)
+    bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 100)
     
     if name == "kappa":
         centers = (bin_edges_kappa[:-1] + bin_edges_kappa[1:]) / 2
@@ -48,11 +50,13 @@ def get_bin_coords(name):
     if name == "kk":
         # Use theta from data_slics if available, otherwise approximation
         try:
-            # Access global data_slics if available
+            # Prefer explicitly cut theta bins when available
+            if kk_theta_for_plots is not None:
+                return kk_theta_for_plots
             return data_slics['theta']
         except:
              # Fallback if global not ready (though it should be called after load)
-             return np.logspace(np.log10(0.59), np.log10(100), 20)
+             return np.logspace(np.log10(0.59), np.log10(100), 100)
              
     return None
 
@@ -212,7 +216,7 @@ def filter_data_block(name, fid_vec, deriv, cov, n_realizations, samples=None, s
                  kl_values[i] = calculate_kl(samples[:, i])
         
         original_count = mask.sum()
-        mask = mask & (kl_values <= 0.2)
+        mask = mask & (kl_values <= 0.1)
         kl_removed_count = original_count - mask.sum()
         if kl_removed_count > 0:
             print(f"{name}: removed {kl_removed_count} bins due to KL > 0.1")
@@ -344,11 +348,11 @@ class FisherDataBlock:
 def create_block(name, key_mean, key_deriv, key_cov, key_samples):
     return FisherDataBlock(name, key_deriv, key_cov, n_realizations, fid_vec=key_mean, samples=key_samples)
 
-data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_morebins.npz")
-data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_morebins.npz")
-data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th_morebins.npz")
-data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th_morebins.npz")
-data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_nosub.npz")
+data_om02 = np.load(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz")
+data_om04 = np.load(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz")
+data_s807 = np.load(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz")
+data_s809 = np.load(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz")
+data_slics = np.load(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_nosub.npz")
 
 slics_samples = load_slics_samples(SLICS_DIR)
 
@@ -527,6 +531,40 @@ pn_cov = data_slics['pn_cov'] * area_scaling
 dcorr_cov = data_slics['dcorr_cov'] * area_scaling
 n = n_realizations
 
+# Manual angular cut for kk: keep only theta <= 10 arcmin
+kk_theta_full = np.asarray(data_slics['theta'])
+kk_theta_mask_10 = kk_theta_full <= 10.0
+if not np.any(kk_theta_mask_10):
+    raise ValueError("No kk bins satisfy theta <= 10 arcmin.")
+
+kk_theta_for_plots = kk_theta_full[kk_theta_mask_10]
+kk_mean = np.asarray(data_slics['kk_mean'])[kk_theta_mask_10]
+kk_deriv = kk_deriv[:, kk_theta_mask_10]
+kk_cov = kk_cov[np.ix_(kk_theta_mask_10, kk_theta_mask_10)]
+
+if slics_samples.get('kk') is not None:
+    slics_samples['kk'] = slics_samples['kk'][:, kk_theta_mask_10]
+
+all_len = np.asarray(data_slics['all_mean']).shape[0]
+all_pdf_len = np.asarray(data_slics['all_and_pdf_mean']).shape[0]
+kk_kept_idx = np.where(kk_theta_mask_10)[0]
+
+# Keep [all, kk(theta<=10)] for the combined vectors.
+keep_all_and_kk = np.concatenate([np.arange(all_len), all_len + kk_kept_idx])
+all_and_kk_deriv = all_and_kk_deriv[:, keep_all_and_kk]
+all_and_kk_cov = all_and_kk_cov[np.ix_(keep_all_and_kk, keep_all_and_kk)]
+if slics_samples.get('all') is not None and slics_samples.get('kk') is not None:
+    slics_samples['all_and_kk'] = np.hstack([slics_samples['all'], slics_samples['kk']])
+
+# Keep [all_and_pdf, kk(theta<=10)] for the combined vectors.
+keep_all_howls_and_kk = np.concatenate([np.arange(all_pdf_len), all_pdf_len + kk_kept_idx])
+all_howls_and_kk_deriv = all_howls_and_kk_deriv[:, keep_all_howls_and_kk]
+all_howls_and_kk_cov = all_howls_and_kk_cov[np.ix_(keep_all_howls_and_kk, keep_all_howls_and_kk)]
+if slics_samples.get('all_and_pdf') is not None and slics_samples.get('kk') is not None:
+    slics_samples['all_howls_and_kk'] = np.hstack([slics_samples['all_and_pdf'], slics_samples['kk']])
+
+print(f"kk theta cut: kept {kk_theta_mask_10.sum()}/{kk_theta_mask_10.size} bins with theta <= 10 arcmin")
+
 # 1. Initialize Individual Blocks
 kappa_block = create_block("kappa", data_slics["kappa_mean"], kappa_deriv, kappa_cov, slics_samples.get("kappa")).filter()
 kappa_pos_block = create_block("kappa_pos", data_slics["kappa_pos_mean"], kappa_pos_deriv, kappa_pos_cov, slics_samples.get("kappa_pos")).filter()
@@ -547,7 +585,7 @@ for scale in [1, 2, 4, 8]:
         block = create_block(key, m_val, d_val, c_val, s_val).filter()
         nn_blocks[key] = block
 
-kk_block = create_block("kk", data_slics["kk_mean"], kk_deriv, kk_cov, slics_samples.get("kk")).filter()
+kk_block = create_block("kk", kk_mean, kk_deriv, kk_cov, slics_samples.get("kk")).filter()
 pp_block = create_block("pp", data_slics["pp_mean"], pp_deriv, pp_cov, slics_samples.get("pp")).filter()
 nn_block = create_block("nn", data_slics["nn_mean"], nn_deriv, nn_cov, slics_samples.get("nn")).filter()
 pn_block = create_block("pn", data_slics["pn_mean"], pn_deriv, pn_cov, slics_samples.get("pn")).filter()
@@ -686,6 +724,13 @@ all_howls_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_howls_and_kk,
 all_and_kk_samples = GaussianND(mean=params_fid, cov=cov_all_and_kk, names=names, labels=labels, label=r"$All HOWLS + \kappa\text{-2PCF}$")
 dcorr_samples = GaussianND(mean=params_fid, cov=cov_dcorr, names=names, labels=labels, label=r"$D-2PCF$")
 
+# save fisher matrix for defects
+np.save("outfiles/defects_fisher_s467_th_nosub.npy", fisher_mats['all'])
+# save pdf results
+np.save("outfiles/pdf_fisher_s467_th_KL0.1_nosub.npy", fisher_mats['kappa'])
+# save kappa 2pcf results
+np.save("outfiles/kk_fisher_s467_th_KL0.1_nosub.npy", fisher_mats['kk'])
+
 import matplotlib.pyplot as plt
 from getdist import plots
 import matplotlib as mpl
@@ -705,7 +750,7 @@ g.plot_2d([kk_samples, kappa_samples, kappa_all_samples],
             colors = [color_map(i) for i in range(2)] + ['red'],
             lws=2)
 g.add_legend([r"$\kappa$-2PCF", r"PDF", r"D-CDF"], legend_loc='upper right', fontsize=7)
-g.export("outfiles/dcdf.png", dpi=300)
+g.export("outfiles/dcdf_nosub.png", dpi=300)
 # pdf nn_1, nn_2, nn_4, nn_8, nn_all
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
 g.settings.num_plot_contours = 1
@@ -716,7 +761,7 @@ g.plot_2d([kk_samples, kappa_samples, nn_all_samples],
             colors = [color_map(i) for i in range(2)] + ['red'],
             lws=2)
 g.add_legend([r"$\kappa$-2PCF", r"PDF", r"kNNs"], legend_loc='upper right', fontsize=7)
-g.export("outfiles/nns.png", dpi=300)
+g.export("outfiles/nns_nosub.png", dpi=300)
 
 # kappa_all nn_all all
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
@@ -729,7 +774,7 @@ g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_p
             ls = ['solid', 'solid', 'solid', 'solid', 'solid', 'dashed'],
             lws=2)
 g.add_legend([r"$\kappa$-2PCF", r"PDF", r"Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"All HOWLS", r"$\text{All HOWLS} + \kappa\text{-2PCF}$"], legend_loc='upper right', fontsize=7)
-g.export("outfiles/combined.png", dpi=300)
+g.export("outfiles/combined_nosub.png", dpi=300)
           
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
 g.settings.num_plot_contours = 1
@@ -740,7 +785,7 @@ g.plot_2d([kk_samples, kappa_samples, dcorr_samples, nn_all_samples],
             colors = [color_map(i) for i in range(3)] + ['red'],
             lws=2)
 g.add_legend([r"$\kappa$-2PCF", r"PDF", r"D-2PCF", r"kNNs"], legend_loc='upper right', fontsize=7)
-g.export("outfiles/dcorr.png", dpi=300)
+g.export("outfiles/dcorr_nosub.png", dpi=300)
 
 # print 1 sigma errors
 print("1 sigma errors:")
@@ -824,12 +869,17 @@ ax.invert_yaxis()  # labels read top-to-bottom
 ax.set_xlim(0, max_err * 1.15)
 ax.legend()
 plt.tight_layout()
-plt.savefig("outfiles/1sigma_bars.png", dpi=300)
+plt.savefig("outfiles/1sigma_bars_nosub.png", dpi=300)
 plt.close()
 
-# save fisher matrix for defects
-np.save("outfiles/defects_fisher_s467_th_nosub.npy", fisher_mats['all'])
-# save pdf results
-np.save("outfiles/pdf_fisher_s467_th_KL0.2_nosub.npy", fisher_mats['kappa'])
-# save kappa 2pcf results
-np.save("outfiles/kk_fisher_s467_th_KL0.2_nosub.npy", fisher_mats['kk'])
+# Labels for our results
+fid_om = params_fid[0]
+fid_s8 = params_fid[1]
+our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
+# Covariances for our results
+our_covs = [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]
+# save a npz of all relative errors for 2pcf, pdf, defects, defects+pdf, defects+pdf+2pcf
+np.savez("outfiles/relative_errors_s467_th_KL0.1_nosub.npz",
+         labels=our_labels,
+         rel_err_om=[(np.sqrt(cov[0,0]) / fid_om) * 100 for cov in our_covs],
+         rel_err_s8=[(np.sqrt(cov[1,1]) / fid_s8) * 100 for cov in our_covs])

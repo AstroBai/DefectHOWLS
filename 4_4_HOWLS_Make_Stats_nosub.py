@@ -10,7 +10,7 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 N = 1101
 for i in tqdm(range(N)):
     try:
-        bin_edges = np.linspace(-0.04, 0.04, 100)
+        bin_edges = np.linspace(-0.05, 0.05, 100)
         df = DefectFinder(f"{SLICS_DIR}/angles_s467_th_{i}_LCDM_SLICS_ks_nomask_shear.npz")
         df.load_defects(f"{SLICS_DIR}/defects_s467_th_{i}_LCDM_SLICS_ks_nomask_shear.npz")
         kappa, _ = np.histogram(df.kappa, bins=bin_edges, density=True)
@@ -35,10 +35,10 @@ for i in tqdm(range(N)):
         nn_neg_same8 = df.nearest_distance(charge=-0.5, k=8)
         nn_pos_opp8 = df.nearest_opposite_distance(charge=0.5, k=8)
         nn_neg_opp8 = df.nearest_opposite_distance(charge=-0.5, k=8)
-        bin_edges1 = np.logspace(np.log10(0.6), np.log10(6), 20)
-        bin_edges2 = np.logspace(np.log10(1.2), np.log10(12), 20)
-        bin_edges4 = np.logspace(np.log10(2.4), np.log10(24), 20)
-        bin_edges8 = np.logspace(np.log10(4.8), np.log10(48), 20)
+        bin_edges1 = np.logspace(np.log10(0.59), np.log10(100), 100)
+        bin_edges2 = np.logspace(np.log10(0.59), np.log10(100), 100)
+        bin_edges4 = np.logspace(np.log10(0.59), np.log10(100), 100)
+        bin_edges8 = np.logspace(np.log10(0.59), np.log10(100), 100)
         nn_pos_same1_cum = np.array([np.sum(nn_pos_same1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2   
         nn_neg_same1_cum = np.array([np.sum(nn_neg_same1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2 
         nn_pos_opp1_cum = np.array([np.sum(nn_pos_opp1 < b) for b in bin_edges1]) / 100 * (180/np.pi)**2 
@@ -60,18 +60,18 @@ for i in tqdm(range(N)):
         df.save_defects(fits_path)
         theta, pp = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                             charge2_path=f"{fits_path}_charge_+0.5.fits",
-                                            min_sep=0.59, max_sep=40, n_bins=20)
+                                            min_sep=0.59, max_sep=100, n_bins=100)
         theta, nn = df.correlation_function(charge1_path=f"{fits_path}_charge_-0.5.fits",
                                             charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                            min_sep=0.59, max_sep=40, n_bins=20)
+                                            min_sep=0.59, max_sep=100, n_bins=100)
         theta, pn = df.correlation_function(charge1_path=f"{fits_path}_charge_+0.5.fits",
                                             charge2_path=f"{fits_path}_charge_-0.5.fits",
-                                            min_sep=0.59, max_sep=40, n_bins=20)
+                                            min_sep=0.59, max_sep=100, n_bins=100)
 
         df = DefectFinder(f"{SLICS_DIR}/angles_{i}_LCDM_SLICS_ks_nomask_shear.npz")
-        theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=40, n_bins=20)
+        theta, kk = df.convergence_correlation(min_sep=0.59, max_sep=100, n_bins=100)
 
-        np.savez(f"{SLICS_DIR}/SLICS_stats_s467_th_morebins_nosub_{i}.npz",
+        np.savez(f"{SLICS_DIR}/SLICS_stats_s467_th_nosub_{i}.npz",
                     kappa=kappa,
                     kappa_pos_cum=kappa_pos_cum,
                     kappa_neg_cum=kappa_neg_cum,

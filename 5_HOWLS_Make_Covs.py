@@ -40,7 +40,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{OM02_DIR}/OM02_stats_s467_th_diff_{i}.npz")
+    data = np.load(f"{OM02_DIR}/OM02_stats_s467_th_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -215,7 +215,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             kk_list]), rowvar=False)
 
 
-np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th_diff.npz",
+np.savez(f"{OM02_DIR}/OM02_stats_cov_mean_s467_th.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -320,7 +320,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{OM04_DIR}/OM04_stats_s467_th_diff_{i}.npz")
+    data = np.load(f"{OM04_DIR}/OM04_stats_s467_th_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -496,7 +496,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             kk_list]), rowvar=False)
 
 
-np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th_diff.npz",
+np.savez(f"{OM04_DIR}/OM04_stats_cov_mean_s467_th.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -601,7 +601,7 @@ nn_list = []
 pn_list = []
 
 for i in tqdm(range(N)):
-    data = np.load(f"{S807_DIR}/S807_stats_s467_th_diff_{i}.npz")
+    data = np.load(f"{S807_DIR}/S807_stats_s467_th_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -775,7 +775,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
                             kk_list]), rowvar=False)
 
-np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467_th_diff.npz",
+np.savez(f"{S807_DIR}/S807_stats_cov_mean_s467_th.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -880,7 +880,7 @@ pn_list = []
 
 
 for i in tqdm(range(N)):
-    data = np.load(f"{S809_DIR}/S809_stats_s467_th_diff_{i}.npz")
+    data = np.load(f"{S809_DIR}/S809_stats_s467_th_{i}.npz")
     bin_edges = data['bin_edges']
     bin_edges1 = data['bin_edges1']
     bin_edges2 = data['bin_edges2']
@@ -1053,7 +1053,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
                             nn_pos_same4_list, nn_neg_same4_list, nn_pos_opp4_list, nn_neg_opp4_list,
                             nn_pos_same8_list, nn_neg_same8_list, nn_pos_opp8_list, nn_neg_opp8_list,
                             kk_list]), rowvar=False)
-np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_diff.npz",
+np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -1159,7 +1159,7 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_diff.npz",
 
 # for i in tqdm(range(N)):
 #     try:
-#         data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_diff_{i}.npz")
+#         data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_{i}.npz")
 #         bin_edges = data['bin_edges']
 #         bin_edges1 = data['bin_edges1']
 #         bin_edges2 = data['bin_edges2']
@@ -1337,7 +1337,7 @@ np.savez(f"{S809_DIR}/S809_stats_cov_mean_s467_th_diff.npz",
 
 
 
-# np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_diff.npz",
+# np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th.npz",
 #          bin_edges=bin_edges,
 #          bin_edges1=bin_edges1,
 #          bin_edges2=bin_edges2,
@@ -1445,7 +1445,7 @@ N=1101
 for i in tqdm(range(N)):
     try:
         for subfield in range(4):
-            with np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_diff_{i}_subfield{subfield}.npz") as data:
+            with np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz") as data:
                 bin_edges = data['bin_edges']
                 bin_edges1 = data['bin_edges1']
                 bin_edges2 = data['bin_edges2']
@@ -1622,7 +1622,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
 
 
 
-np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_diff_subfields.npz",
+np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_subfields.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
@@ -1852,3 +1852,54 @@ for name, (data_mat, mean_vec, cov_mat) in quantities.items():
         plot_ridgeline_kl(data_mat, mask, f"SLICS Distribution of {name} (Filtered)", f"{name}_ridgeline_SLICS_KL")
     except Exception as e:
         print(f"Failed to plot ridgeline KL for {name}: {e}")
+
+
+def plot_raw_with_errorbars(data_matrix, mean_vec, cov_mat, title, filename_suffix):
+    n_samples, n_bins = data_matrix.shape
+    x = np.arange(n_bins)
+    sigma = np.sqrt(np.diag(cov_mat))
+
+    fig, ax = plt.subplots(figsize=(max(7, n_bins * 0.35), 4.5))
+
+    # Draw every realization as a thin, transparent line.
+    for i in range(n_samples):
+        ax.plot(x, data_matrix[i], color='0.65', alpha=0.08, lw=0.5)
+
+    ax.errorbar(
+        x,
+        mean_vec,
+        yerr=sigma,
+        fmt='o-',
+        color='tab:red',
+        ecolor='tab:red',
+        elinewidth=1.0,
+        capsize=2,
+        markersize=3,
+        lw=1.2,
+        label='Mean $\\pm$ 1$\\sigma$'
+    )
+
+    ax.set_title(title)
+    ax.set_xlabel('Bin index')
+    ax.set_ylabel('Value')
+    ax.grid(alpha=0.2)
+    ax.legend(loc='best', fontsize=8)
+    plt.tight_layout()
+
+    os.makedirs('outfiles/RawWithErrorbars_SLICS', exist_ok=True)
+    plt.savefig(f"outfiles/RawWithErrorbars_SLICS/{filename_suffix}.png", dpi=300)
+    plt.close()
+
+
+print("Plotting raw data with error bars for all SLICS quantities...")
+for name, (data_mat, mean_vec, cov_mat) in quantities.items():
+    try:
+        plot_raw_with_errorbars(
+            data_mat,
+            mean_vec,
+            cov_mat,
+            f"SLICS {name}: all raw realizations + mean error bars",
+            f"{name}_raw_with_errorbars"
+        )
+    except Exception as e:
+        print(f"Failed to plot raw+errorbar for {name}: {e}")

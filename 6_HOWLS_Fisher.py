@@ -783,6 +783,8 @@ import matplotlib.cm as cm
 # Define External Data
 # Label, rel_err_om (%), rel_err_sigma8 (%)
 external_data = [
+    (r"$\kappa$-2PCF", 1.88, 1.13),
+    (r"$\kappa$-PDF", 0.70, 0.42),
     ("Peaks", 0.70, 0.45),
     ("MFs", 0.74, 0.35),
     ("BNs", 1.27, 0.72),
@@ -796,7 +798,7 @@ fid_om = params_fid[0]
 fid_s8 = params_fid[1]
 
 # Labels for our results
-our_labels = [r"$\kappa$-2PCF", "PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
+our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
 # Covariances for our results
 our_covs = [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]
 
@@ -906,6 +908,14 @@ plt.savefig("outfiles/1sigma_bars.png", dpi=300)
 plt.close()
 
 # save fisher matrix for defects
-np.save("outfiles/defects_fisher_s467_th.npy", fisher_mats['all'])
+np.save("outfiles/defects_fisher_s467_th_KL0.1.npy", fisher_mats['all'])
 # save pdf results
 np.save("outfiles/pdf_fisher_s467_th_KL0.1.npy", fisher_mats['kappa'])
+# save kk
+np.save("outfiles/kk_fisher_s467_th_KL0.1.npy", fisher_mats['kk'])
+
+# save a npz of all relative errors for 2pcf, pdf, defects, defects+pdf, defects+pdf+2pcf
+np.savez("outfiles/relative_errors_s467_th_KL0.1.npz",
+         labels=our_labels,
+         rel_err_om=[(np.sqrt(cov[0,0]) / fid_om) * 100 for cov in our_covs],
+         rel_err_s8=[(np.sqrt(cov[1,1]) / fid_s8) * 100 for cov in our_covs])

@@ -52,7 +52,7 @@ def load_slics_samples(slics_dir, n_files=1101):
     for i in tqdm(range(n_files), desc="Loading SLICS"):
         for subfield in range(4):
             try:
-                filepath = f"{slics_dir}/SLICS_stats_s467_th_lessbins_{i}_subfield{subfield}.npz"
+                filepath = f"{slics_dir}/SLICS_stats_s467_th_{i}_subfield{subfield}.npz"
                 if not os.path.exists(filepath):
                     continue
                 
@@ -119,7 +119,7 @@ def get_kept_mask(name, fid_vec, cov, samples=None, sigma_thresh=2.0):
                  if i < samples.shape[1]:
                     kl_values[i] = calculate_kl(samples[:, i])
         
-        mask = mask & (kl_values <= 0.1) # Threshold 0.1 consistent with Fisher script
+        mask = mask & (kl_values <= 0.3) # Threshold 0.1 consistent with Fisher script
         
         if mask.sum() == 0:
             print(f"WARNING: {name}: All bins removed by KL filter.")

@@ -39,7 +39,7 @@ pn_list = []
 
 for i in tqdm(range(N)):
     try:
-        data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_morebins_nosub_{i}.npz")
+        data = np.load(f"{SLICS_DIR}/SLICS_stats_s467_th_nosub_{i}.npz")
         bin_edges = data['bin_edges']
         bin_edges1 = data['bin_edges1']
         bin_edges2 = data['bin_edges2']
@@ -217,7 +217,7 @@ all_and_kk_cov = np.cov(np.hstack([kappa_pos_list, kappa_neg_list,
 
 
 
-np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_morebins_nosub.npz",
+np.savez(f"{SLICS_DIR}/SLICS_stats_cov_mean_s467_th_nosub.npz",
          bin_edges=bin_edges,
          bin_edges1=bin_edges1,
          bin_edges2=bin_edges2,
