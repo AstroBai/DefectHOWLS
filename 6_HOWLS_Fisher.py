@@ -283,6 +283,39 @@ def filter_data_block(name, fid_vec, deriv, cov, n_realizations, samples=None, s
     
     # Apply final mask
     cov_final = cov[np.ix_(mask, mask)]
+
+    # Stabilize inversion using renormalization when condition number is high.
+    cond_threshold = 1e12
+    try:
+        cond_cov = np.linalg.cond(cov_final)
+    except np.linalg.LinAlgError:
+        cond_cov = np.inf
+
+    if not np.isfinite(cond_cov):
+        cond_cov = np.inf
+    print(f"{name}: covariance condition number: {cond_cov:.3e}")
+
+    use_renormalized_inverse = False
+    renorm_scales = None
+    corr_cov = None
+
+    if cond_cov > cond_threshold:
+        renorm_scales = np.sqrt(np.diag(cov_final))
+        renorm_scales = np.where(np.isfinite(renorm_scales) & (renorm_scales > 0), renorm_scales, 1.0)
+        corr_cov = cov_final / np.outer(renorm_scales, renorm_scales)
+        corr_cov = 0.5 * (corr_cov + corr_cov.T)
+
+        try:
+            cond_corr = np.linalg.cond(corr_cov)
+        except np.linalg.LinAlgError:
+            cond_corr = np.inf
+
+        print(
+            f"{name}: condition number > {cond_threshold:.0f}, use renormalized inverse; "
+            f"corr cond={cond_corr:.3e}"
+        )
+        use_renormalized_inverse = True
+
     # Hartlap
     hartlap = (n_realizations - mask.sum() - 2) / (n_realizations - 1)
     if mask.sum() >= n_realizations - 2:
@@ -290,10 +323,18 @@ def filter_data_block(name, fid_vec, deriv, cov, n_realizations, samples=None, s
         hartlap = 1.0 
         
     try:
-        inv_cov = np.linalg.inv(cov_final) * hartlap
+        if use_renormalized_inverse:
+            inv_corr = np.linalg.inv(corr_cov)
+            inv_cov = (inv_corr / np.outer(renorm_scales, renorm_scales)) * hartlap
+        else:
+            inv_cov = np.linalg.inv(cov_final) * hartlap
     except np.linalg.LinAlgError:
         print(f"ERROR: {name}: Singular matrix. Using pseudo-inverse.")
-        inv_cov = np.linalg.pinv(cov_final) * hartlap
+        if use_renormalized_inverse:
+            inv_corr = np.linalg.pinv(corr_cov)
+            inv_cov = (inv_corr / np.outer(renorm_scales, renorm_scales)) * hartlap
+        else:
+            inv_cov = np.linalg.pinv(cov_final) * hartlap
 
     return deriv[:, mask], cov_final, inv_cov, mask
 
