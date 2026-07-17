@@ -253,7 +253,7 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
     label_map = {
         'kappa_all': 'D-CDF',
         'nn_all': 'kNN',
-        'kappa': 'PDF',
+        'kappa': r'$\kappa$-PDF',
         'kk': r'$\kappa$-2PCF'
     }
 
@@ -327,7 +327,7 @@ def plot_corr_matrix(name, cov, mask, filename, data_slics, area_scaling):
         leaves = [
             ('D-CDF', len_dcdf),
             ('kNN-CDF', len_knn),
-            ('PDF', len_pdf),
+            (r'$\kappa$-PDF', len_pdf),
             (r'$\kappa$-2PCF', len_kk)
         ]
     else:
@@ -470,13 +470,13 @@ if __name__ == "__main__":
         slics_samples['dcorr'] = np.hstack([slics_samples['pp'], slics_samples['nn'], slics_samples['pn']])
     
     targets = [
-        'kappa',
-        'kappa_all',
-        'nn_all',
-        'all',
-        'all_and_pdf',
-        'all_and_kk',
-        'dcorr',
+        # 'kappa',
+        # 'kappa_all',
+        # 'nn_all',
+        # 'all',
+        # 'all_and_pdf',
+        # 'all_and_kk',
+        # 'dcorr',
         'all_howls_and_kk'
     ]
     

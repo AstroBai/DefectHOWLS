@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter, ScalarFormatter, MaxNLocator
 from DefectFinder import DefectFinder
 from mpl_toolkits.axes_grid1 import make_axes_locatable 
 
@@ -12,7 +13,7 @@ SLICS_DIR = f"{DATA_DIR}/LCDM_SLICS"
 # --- Configuration for Zoom ---
 N_pix_total = 1024
 FoV_total = 10.0 # degrees
-FoV_zoom = 10   # degrees
+FoV_zoom = 2   # degrees
 seed = 997
 
 # Calculate pixel limit for the zoom
@@ -21,10 +22,10 @@ print(f"Zooming into first {limit_pix}x{limit_pix} pixels ({FoV_zoom}x{FoV_zoom}
 
 # 1. Load Convergence Data (Background Image)
 print("Loading convergence data...")
-with fits.open(f"{SLICS_DIR}/kappa_noise_GalCatalog_LOS_cone{seed}.fits_s333{seed}_zmin0.0_zmax3.0_sys_3.fits_ks_nomask_shear.fits") as hdul:
+with fits.open(f"/home/jbai/cephfs_copy/cephfs/jbai/HOWLS_Data/LCDM_SLICS/kappa_noise_GalCatalog_LOS_cone{seed}.fits_s333{seed}_zmin0.0_zmax3.0_sys_3.fits_ks_nomask_shear.fits") as hdul:
     convergence_data = hdul[0].data[0]  # add noise
     # Apply Gaussian smoothing (sigma=8 pixels)
-    convergence_smoothed = gaussian_filter(convergence_data, sigma=32)
+    convergence_smoothed = gaussian_filter(convergence_data, sigma=8)
 
 # 2. Load DefectFinder Data (Shear & Defects)
 print("Loading defect data...")
@@ -68,15 +69,15 @@ def plot_defect_markers(ax):
         y_pos = (r / limit_pix) * FoV_zoom
         color = 'red' if wnum > 0 else 'royalblue'
         sign = '+' if wnum > 0 else '-'
-        ax.scatter(x_pos, y_pos, c=color, marker='o', s=100,
+        ax.scatter(x_pos, y_pos, c=color, marker='o', s=80,
                    edgecolors='white', linewidth=1, zorder=10)
         ax.text(x_pos, y_pos, sign, ha='center', va='center', color='white',
-                fontsize=10, fontweight='bold', zorder=11)
+                fontsize=8, fontweight='bold', zorder=11)
 
 # 3. Plotting
 print("Plotting...")
 # Changed to 3 subplots, increased figure width
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5)) 
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12, 3.5)) 
 extent = [0, FoV_zoom, 0, FoV_zoom] # Set axis to degrees
 
 # --- Subplot 1: Convergence with Shear Orientation ---
@@ -85,7 +86,8 @@ im1 = ax1.imshow(conv_zoom, origin='lower', cmap='RdYlBu_r', extent=extent)
 # 使用 make_axes_locatable 创建与 ax1 高度一致的 colorbar
 divider1 = make_axes_locatable(ax1)
 cax1 = divider1.append_axes("right", size="5%", pad=0.1)
-plt.colorbar(im1, cax=cax1, label=r'Convergence $\kappa$')
+cbar1 = plt.colorbar(im1, cax=cax1, label=r'Convergence $\kappa$')
+cbar1.ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
 # Quiver (Downsampled)
 step = 8
@@ -116,12 +118,14 @@ for (r, c), wnum in defects_zoom.items():
     current_labels = [l.get_label() for l in ax1.collections]
     lbl = label if label not in current_labels else ""
     
-    ax1.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, label=lbl, zorder=10)
-    ax1.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
+    ax1.scatter(x_pos, y_pos, c=color, marker='o', s=80, edgecolors='white', linewidth=1, label=lbl, zorder=10)
+    ax1.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=8, fontweight='bold', zorder=11)
 
-ax1.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+# ax1.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax1.set_xlabel('RA [deg]')
 ax1.set_ylabel('Dec [deg]')
+ax1.set_xticks(np.linspace(0, FoV_zoom, 5))
+ax1.set_yticks(np.linspace(0, FoV_zoom, 5))
 
 # --- Subplot 2: Shear Amplitude with Orientation ---
 im2 = ax2.imshow(shear_zoom, origin='lower', cmap='plasma', extent=extent)
@@ -129,7 +133,10 @@ im2 = ax2.imshow(shear_zoom, origin='lower', cmap='plasma', extent=extent)
 # 使用 make_axes_locatable 创建与 ax2 高度一致的 colorbar
 divider2 = make_axes_locatable(ax2)
 cax2 = divider2.append_axes("right", size="5%", pad=0.1)
-plt.colorbar(im2, cax=cax2, label=r'Shear Amplitude $|\gamma|$')
+cbar2 = plt.colorbar(im2, cax=cax2, label=r'Shear Amplitude $|\gamma|$')
+cbar2.set_ticks([0.0, 0.01, 0.02])
+cbar2.ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+cbar2.ax.tick_params(colors='black', length=6, width=1.5)
 
 ax2.quiver(X[::step, ::step], Y[::step, ::step], 
           ux_zoom[::step, ::step], uy_zoom[::step, ::step], 
@@ -148,12 +155,14 @@ for (r, c), wnum in defects_zoom.items():
         color = 'royalblue'
         sign = '-'
         
-    ax2.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, zorder=10)
-    ax2.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
+    ax2.scatter(x_pos, y_pos, c=color, marker='o', s=80, edgecolors='white', linewidth=1, zorder=10)
+    ax2.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=8, fontweight='bold', zorder=11)
 
-ax2.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+# ax2.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax2.set_xlabel('RA [deg]')
 ax2.set_ylabel('Dec [deg]')
+ax2.set_xticks(np.linspace(0, FoV_zoom, 5))
+ax2.set_yticks(np.linspace(0, FoV_zoom, 5))
 
 # --- Subplot 3: Shear Phase (No Quiver) ---
 # Using 'twilight' colormap which is good for cyclic phase data
@@ -193,12 +202,14 @@ for (r, c), wnum in defects_zoom.items():
         color = 'royalblue'
         sign = '-'
         
-    ax3.scatter(x_pos, y_pos, c=color, marker='o', s=100, edgecolors='white', linewidth=1, zorder=10)
-    ax3.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=10, fontweight='bold', zorder=11)
+    ax3.scatter(x_pos, y_pos, c=color, marker='o', s=80, edgecolors='white', linewidth=1, zorder=10)
+    ax3.text(x_pos, y_pos, sign, ha='center', va='center', color='white', fontsize=8, fontweight='bold', zorder=11)
 
-ax3.set_title(f'Shear Phase ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
+# ax3.set_title(f'Shear Phase ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax3.set_xlabel('RA [deg]')
 ax3.set_ylabel('Dec [deg]')
+ax3.set_xticks(np.linspace(0, FoV_zoom, 5))
+ax3.set_yticks(np.linspace(0, FoV_zoom, 5))
 
 plt.tight_layout(pad=0.3)
 plt.savefig("outfiles/Demo_Defects.png", dpi=300, bbox_inches='tight')
@@ -223,7 +234,7 @@ X, Y = np.meshgrid(x_deg, y_deg)
 ax1_nd.quiver(X[::step, ::step], Y[::step, ::step], 
               ux_zoom[::step, ::step], uy_zoom[::step, ::step], 
               angles='xy', scale_units='xy',
-              color='white', width=0.004, alpha=0.6,
+              color='white', width=0.006, alpha=0.8,
               headwidth=0, headlength=0, headaxislength=0, pivot='mid')
 
 ax1_nd.set_title(f'Convergence ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
@@ -239,13 +250,14 @@ plt.colorbar(im2_nd, cax=cax2_nd, label=r'Shear Amplitude $|\gamma|$')
 ax2_nd.quiver(X[::step, ::step], Y[::step, ::step], 
               ux_zoom[::step, ::step], uy_zoom[::step, ::step], 
               angles='xy', scale_units='xy',
-              color='white', width=0.004, alpha=0.6,
+              color='white', width=0.006, alpha=0.8,
               headwidth=0, headlength=0, headaxislength=0, pivot='mid')
 
 ax2_nd.set_title(f'Shear Amplitude ({FoV_zoom}x{FoV_zoom}'+r' ${\rm deg}^2$)')
 ax2_nd.set_xlabel('RA [deg]')
 ax2_nd.set_ylabel('Dec [deg]')
-
+ax2_nd.set_xticks(np.linspace(0, FoV_zoom, 4))
+ax2_nd.set_yticks(np.linspace(0, FoV_zoom, 4))
 # Subplot 3: Shear Phase (no defect markers)
 im3_nd = ax3_nd.imshow(phi_zoom, origin='lower', cmap='twilight', extent=extent)
 divider3_nd = make_axes_locatable(ax3_nd)

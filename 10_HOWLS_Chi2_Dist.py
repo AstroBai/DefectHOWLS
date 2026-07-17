@@ -119,7 +119,7 @@ def get_kept_mask(name, fid_vec, cov, samples=None, sigma_thresh=2.0):
                  if i < samples.shape[1]:
                     kl_values[i] = calculate_kl(samples[:, i])
         
-        mask = mask & (kl_values <= 0.3) # Threshold 0.1 consistent with Fisher script
+        mask = mask & (kl_values <= 0.1) # Threshold 0.1 consistent with Fisher script
         
         if mask.sum() == 0:
             print(f"WARNING: {name}: All bins removed by KL filter.")
@@ -194,11 +194,11 @@ def main():
     display_names = {
         'dcdf': 'D-CDF',
         'knn': 'kNN',
-        'pdf': 'PDF',
+        'pdf': r'$\kappa$-PDF',
         '2pcf': r'$\kappa$-2PCF'
     }
     
-    fig, axes = plt.subplots(2, 2, figsize=(8, 5))
+    fig, axes = plt.subplots(2, 2, figsize=(7, 4))
     axes = axes.flatten()
     
     # Order: D-CDF, kNN, PDF, 2PCF

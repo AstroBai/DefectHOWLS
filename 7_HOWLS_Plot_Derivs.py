@@ -2,7 +2,7 @@ from tqdm import tqdm
 import numpy as np
 import os
 
-DATA_DIR = "/cephfs/jbai/HOWLS_Data"
+DATA_DIR = "cephfs/jbai/HOWLS_Data"
 OM02_DIR = f"{DATA_DIR}/LCDM_Om02_ks_nomask_shear_new"
 OM04_DIR = f"{DATA_DIR}/LCDM_Om04_ks_nomask_shear_new"
 S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
@@ -162,16 +162,53 @@ N_samples = 128
 # stride = 10
 
 
-# 2. DPDF (Pos and Neg) - Combined
-fig, ax = plt.subplots(1, figsize=(3, 2))
+# 2. DPDF and 2NN Derivatives - Combined (2NN on left, DPDF on right)
+fig, axes = plt.subplots(1, 2, figsize=(8, 3), sharey=True)
+n = n_bins_nn
 
+# 2NN (left panel - axes[0]) - showing pos-pos and pos-neg cases
+ax = axes[0]
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(sci_format_func))
+# pos-pos: Omega_m
+y = nn_pos_same2_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n]))
+y_mean_error = y_err / np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial C^{\rm pos-pos}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
+ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
+# pos-neg: Omega_m
+y = nn_pos_opp2_derivs_mean[0:n]
+y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n]))
+y_mean_error = y_err / np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C0', ls='--', label=r'$\partial C^{\rm pos-neg}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
+ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.2)
+# pos-pos: Sigma_8
+y = nn_pos_same2_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n]))
+y_mean_error = y_err / np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial C^{\rm pos-pos}_{\rm 2NN}(\theta) / \partial \sigma_8$')
+ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
+# pos-neg: Sigma_8
+y = nn_pos_opp2_derivs_mean[n:2*n]
+y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n]))
+y_mean_error = y_err / np.sqrt(N_samples)
+ax.plot(bin_edges2, y, c='C1', ls='--', label=r'$\partial C^{\rm pos-neg}_{\rm 2NN}(\theta) / \partial \sigma_8$')
+ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.2)
 
+ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+ax.set_ylabel(r'$\partial {\rm CDF} / \partial p$')
+ax.set_xlabel(r'$\theta$ [arcmin]')
+ax.set_xscale('log')
+ax.legend(loc='upper right', fontsize=8)
+ax.set_title(r'2NN-CDF, $\theta_{\rm s}=4.69$ arcmin')
+
+# DPDF (right panel - axes[1])
+ax = axes[1]
+# Pos
 # Omega_m
 y = kappa_pos_derivs_mean[0:n_bins_pos]
 y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[0:n_bins_pos, 0:n_bins_pos]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges, y, c='C0', ls='-', label=r'$\partial C^{\rm pos}(\kappa) / \partial \Omega_{\rm m}$')
-# ax.fill_between(bin_edges, y - y_err, y + y_err, color='C0', alpha=0.1)
 ax.fill_between(bin_edges, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
 
 # Sigma_8
@@ -179,14 +216,7 @@ y = kappa_pos_derivs_mean[n_bins_pos:2*n_bins_pos]
 y_err = np.sqrt(np.diag(kappa_pos_derivs_cov[n_bins_pos:2*n_bins_pos, n_bins_pos:2*n_bins_pos]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges, y, c='C1', ls='-', label=r'$\partial C^{\rm pos}(\kappa) / \partial \sigma_8$')
-# ax.fill_between(bin_edges, y - y_err, y + y_err, color='C1', alpha=0.1)
 ax.fill_between(bin_edges, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
-
-ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
-ax.set_xlabel(r'$\kappa$')
-ax.set_ylabel(r'$\partial {\rm CDF}(\kappa) / \partial p$')
-# ax.set_title(r'$\partial C^{\rm P}(\kappa) / \partial p$')
-ax.set_xticks(np.array([-0.04, -0.02, 0, 0.02, 0.04]))
 
 # Neg
 # Omega_m
@@ -194,7 +224,6 @@ y = kappa_neg_derivs_mean[0:n_bins_neg]
 y_err = np.sqrt(np.diag(kappa_neg_derivs_cov[0:n_bins_neg, 0:n_bins_neg]))
 y_mean_error = y_err / np.sqrt(N_samples)
 ax.plot(bin_edges, y, c='C0', ls='--', label=r'$\partial C^{\rm neg}(\kappa) / \partial \Omega_{\rm m}$')
-
 
 # Sigma_8
 y = kappa_neg_derivs_mean[n_bins_neg:2*n_bins_neg]
@@ -204,82 +233,13 @@ ax.plot(bin_edges, y, c='C1', ls='--', label=r'$\partial C^{\rm neg}(\kappa) / \
 
 ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
 ax.set_xlabel(r'$\kappa$')
-# ax.set_title(r'$\partial C^{\rm N}(\kappa) / \partial p$')
 ax.set_xticks(np.array([-0.04, -0.02, 0, 0.02, 0.04]))
-ax.yaxis.set_major_formatter(mticker.FuncFormatter(sci_format_func))
+ax.legend(loc='upper right', fontsize=8)
+ax.set_title(r'D-CDF, $\theta_{\rm s}=4.69$ arcmin')
 
-handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
-
+axes[1].tick_params(labelleft=False)
 plt.subplots_adjust(wspace=0)
-plt.savefig('outfiles/derivs_dcdf.png', dpi=300, bbox_inches='tight')
-plt.close()
-
-# 3. NNs
-fig, axes = plt.subplots(1, 2, figsize=(5, 2), sharey=True)
-n = n_bins_nn
-
-# 2NN Same
-ax = axes[0]
-ax.yaxis.set_major_formatter(mticker.FuncFormatter(sci_format_func))
-# Omega_m
-y = nn_pos_same2_derivs_mean[0:n]
-y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[0:n, 0:n]))
-y_mean_error = y_err / np.sqrt(N_samples)
-ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial C^{\rm pos-pos}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
-ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
-y_prime = nn_neg_same2_derivs_mean[0:n]
-ax.plot(bin_edges2, y_prime, c='C0', ls='--', label=r'$\partial C^{\rm neg-neg}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-# Sigma_8
-y = nn_pos_same2_derivs_mean[n:2*n]
-y_err = np.sqrt(np.diag(nn_pos_same2_derivs_cov[n:2*n, n:2*n]))
-y_mean_error = y_err / np.sqrt(N_samples)
-ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial C^{\rm pos-pos}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
-ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
-
-y_prime = nn_neg_same2_derivs_mean[n:2*n]
-ax.plot(bin_edges2, y_prime, c='C1', ls='--', label=r'$\partial C^{\rm neg-neg}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-
-ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
-# ax.set_title(r'$\partial C^{\rm PP}(\theta) / \partial p$')
-ax.set_ylabel(r'$\partial {\rm CDF}(\theta) / \partial p$')
-ax.set_xlabel(r'$\theta$ [arcmin]')
-ax.set_xscale('log')
-ax.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3), fontsize=5)
-
-# 2NN Opp
-ax = axes[1]
-# Omega_m
-y = nn_pos_opp2_derivs_mean[0:n]
-y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[0:n, 0:n]))
-y_mean_error = y_err / np.sqrt(N_samples)
-ax.plot(bin_edges2, y, c='C0', ls='-', label=r'$\partial C^{\rm pos-neg}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C0', alpha=0.1)
-ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C0', alpha=0.3)
-y_prime = nn_neg_opp2_derivs_mean[0:n]
-ax.plot(bin_edges2, y_prime, c='C0', ls='--', label=r'$\partial C^{\rm neg-pos}_{\rm 2NN}(\theta) / \partial \Omega_{\rm m}$')
-
-# Sigma_8
-y = nn_pos_opp2_derivs_mean[n:2*n]
-y_err = np.sqrt(np.diag(nn_pos_opp2_derivs_cov[n:2*n, n:2*n]))
-y_mean_error = y_err / np.sqrt(N_samples)
-ax.plot(bin_edges2, y, c='C1', ls='-', label=r'$\partial C^{\rm pos-neg}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-# ax.fill_between(bin_edges2, y - y_err, y + y_err, color='C1', alpha=0.1)
-ax.fill_between(bin_edges2, y - y_mean_error, y + y_mean_error, color='C1', alpha=0.3)
-y_prime = nn_neg_opp2_derivs_mean[n:2*n]
-ax.plot(bin_edges2, y_prime, c='C1', ls='--', label=r'$\partial C^{\rm neg-pos}_{\rm 2NN}(\theta) / \partial \sigma_8$')
-ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
-# ax.set_title(r'$\partial C^{\rm PN}(\theta) / \partial p$')
-ax.set_xlabel(r'$\theta$ [arcmin]')
-ax.set_xscale('log')
-ax.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3), fontsize=5)
-
-# handles, labels = axes[0].get_legend_handles_labels()
-# fig.legend(handles, labels, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.15))
-plt.subplots_adjust(wspace=0)
-plt.savefig('outfiles/derivs_nns.png', dpi=300, bbox_inches='tight')
+plt.savefig('outfiles/derivs_dcdf_nns.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 
@@ -332,7 +292,7 @@ ax.plot(bin_edges, kappa_neg_s809, label=r'$\sigma_8+$ DCDF-', c=color_map(1))
 ax.plot(bin_edges, kappa_neg_s807, label=r'$\sigma_8-$ DCDF-', c=color_map(1), linestyle='dashed')
 ax.set_xlabel(r'$\kappa$')
 ax.set_title(r'Effect of $\sigma_8$ on DCDFs')
-plt.legend(loc='upper left', bbox_to_anchor=(1.05, 0.55))
+plt.legend(loc='upper left', fontsize=7)
 plt.subplots_adjust(wspace=0)
 # plt.grid(True, alpha=0.1)
 plt.savefig('outfiles/sg8_om_cdf.png', dpi=300, bbox_inches='tight')
