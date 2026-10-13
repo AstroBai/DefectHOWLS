@@ -764,9 +764,9 @@ g.plot_2d([kk_samples, kappa_samples, kappa_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
             lims = [0.3, 0.325, 0.825, 0.86],
-            colors = [color_map(i) for i in range(2)] + ['red'],
+            colors = ['black', 'red', color_map(1)],
             lws=2)
-g.add_legend([r"$\kappa$-2PCF", r"$\kappa$-PDF", r"D-CDF"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"$\kappa$-PDF", r"DCC-CDF"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/dcdf.png", dpi=300)
 # pdf nn_1, nn_2, nn_4, nn_8, nn_all
 g = plots.get_subplot_plotter(width_inch=4, subplot_size_ratio=0.8)
@@ -775,9 +775,9 @@ g.plot_2d([kk_samples, kappa_samples, nn_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
             lims = [0.3, 0.325, 0.825, 0.86],
-            colors = [color_map(i) for i in range(2)] + ['red'],
+            colors = ['black', 'red', color_map(1)],
             lws=2)
-g.add_legend([r"$\kappa$-2PCF", r"$\kappa$-PDF", r"kNNs"], legend_loc='upper right', fontsize=7)
+g.add_legend([r"$\kappa$-2PCF", r"$\kappa$-PDF", r"kNN-CDF"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/nns.png", dpi=300)
 
 # kappa_all nn_all all
@@ -787,7 +787,7 @@ g.plot_2d([kk_samples, kappa_samples, all_samples, all_and_kk_samples, all_and_p
           param1="Om", param2="sigma8",
             filled=False,
             lims = [0.3, 0.325, 0.825, 0.86],
-            colors = [color_map(i) for i in range(4)] + ['red', 'black'],
+            colors = ['black', 'red', color_map(0), color_map(1), color_map(3)] + ['magenta'],
             ls = ['solid', 'solid', 'solid', 'solid', 'solid', 'dashed'],
             lws=2)
 g.add_legend([
@@ -806,7 +806,7 @@ g.plot_2d([kk_samples, kappa_samples, dcorr_samples, nn_all_samples],
           param1="Om", param2="sigma8",
             filled=False,
             lims = [0.3, 0.325, 0.825, 0.86],
-            colors = [color_map(i) for i in range(3)] + ['red'],
+            colors = ['black', color_map(1), color_map(2), color_map(3)] + ['red'],
             lws=2)
 g.add_legend([r"$\kappa$-2PCF", r"$\kappa$-PDF", r"D-2PCF", r"kNNs"], legend_loc='upper right', fontsize=7)
 g.export("outfiles/dcorr.png", dpi=300)
@@ -846,7 +846,7 @@ fid_om = params_fid[0]
 fid_s8 = params_fid[1]
 
 # Labels for our results
-our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
+our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"$\text{Defects} + \kappa\text{-PDF}$", r"Defects + $\kappa\text{-PDF}$ + $\kappa\text{-2PCF}$"]
 # Covariances for our results
 our_covs = [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]
 

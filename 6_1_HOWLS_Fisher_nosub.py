@@ -875,7 +875,7 @@ plt.close()
 # Labels for our results
 fid_om = params_fid[0]
 fid_s8 = params_fid[1]
-our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", "Defects + PDF", r"Defects + PDF + $\kappa\text{-2PCF}$"]
+our_labels = [r"$\kappa$-2PCF", r"$\kappa$-PDF", "Defects", r"$\text{Defects} + \kappa\text{-2PCF}$", r"$\text{Defects} + \kappa\text{-PDF}$", r"Defects + $\kappa\text{-PDF}$ + $\kappa\text{-2PCF}$"]
 # Covariances for our results
 our_covs = [cov_kk, cov_kappa, cov_all, cov_all_and_kk, cov_all_and_pdf, cov_all_howls_and_kk]
 # save a npz of all relative errors for 2pcf, pdf, defects, defects+pdf, defects+pdf+2pcf

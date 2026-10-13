@@ -192,8 +192,8 @@ def main():
     
     # Display Names map
     display_names = {
-        'dcdf': 'D-CDF',
-        'knn': 'kNN',
+        'dcdf': 'DCC-CDF',
+        'knn': 'kNN-CDF',
         'pdf': r'$\kappa$-PDF',
         '2pcf': r'$\kappa$-2PCF'
     }
@@ -314,7 +314,7 @@ def main():
         
         # Add SMAPE to plot
         ax.text(0.95, 0.85, f'{display_name}, SMAPE = {smape:.3f}', 
-                transform=ax.transAxes, ha='right', va='top', fontsize=8)
+                transform=ax.transAxes, ha='right', va='top', fontsize=7)
         
         # ax.set_title(display_name, fontsize=14)
         ax.set_xlabel(r'$\chi^2$')

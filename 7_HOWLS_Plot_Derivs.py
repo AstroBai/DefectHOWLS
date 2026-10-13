@@ -2,7 +2,8 @@ from tqdm import tqdm
 import numpy as np
 import os
 
-DATA_DIR = "cephfs/jbai/HOWLS_Data"
+
+DATA_DIR = "/cephfs/jbai/HOWLS_Data"
 OM02_DIR = f"{DATA_DIR}/LCDM_Om02_ks_nomask_shear_new"
 OM04_DIR = f"{DATA_DIR}/LCDM_Om04_ks_nomask_shear_new"
 S807_DIR = f"{DATA_DIR}/LCDM_s80707210_ks_nomask_shear_new"
@@ -152,7 +153,7 @@ def sci_format_func(x, pos):
         return "0"
     exponent = int(np.floor(np.log10(abs(x))))
     coeff = x / 10**exponent
-    return r"${:.0f} \times 10^{{{}}}$".format(coeff, exponent)
+    return r"${:.1f} \times 10^{{{}}}$".format(coeff, exponent)
 
 
 if not os.path.exists('outfiles'):
@@ -235,7 +236,7 @@ ax.axhline(0, color='gray', linestyle='--', linewidth=0.8)
 ax.set_xlabel(r'$\kappa$')
 ax.set_xticks(np.array([-0.04, -0.02, 0, 0.02, 0.04]))
 ax.legend(loc='upper right', fontsize=8)
-ax.set_title(r'D-CDF, $\theta_{\rm s}=4.69$ arcmin')
+ax.set_title(r'DCC-CDF, $\theta_{\rm s}=4.69$ arcmin')
 
 axes[1].tick_params(labelleft=False)
 plt.subplots_adjust(wspace=0)
